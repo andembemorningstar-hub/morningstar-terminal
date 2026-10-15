@@ -7,43 +7,60 @@
 <title>Morningstar Terminal — Trading Journal</title>
 <style>
  
-/* MORNINGSTAR TERMINAL — OBSIDIAN GREEN */
+/* MORNINGSTAR TERMINAL — EMERALD 3D */
 body {
-  background: #050907;
-  background-image:
-    radial-gradient(ellipse at 20% 20%, rgba(0, 255, 120, 0.12), transparent 45%),
-    radial-gradient(ellipse at 80% 80%, rgba(0, 180, 90, 0.10), transparent 45%);
-  background-attachment: fixed;
-  color: #e7fff0;
+  background: #101a14;
+  color: #eaffef;
   position: relative;
   isolation: isolate;
 }
 
-body::before {
+body::before,
+body::after {
   content: "";
   position: fixed;
-  inset: -50%;
-  z-index: -1;
+  inset: 0;
   pointer-events: none;
-  background:
-    repeating-linear-gradient(
-      115deg,
-      transparent 0 90px,
-      rgba(0, 255, 120, 0.035) 91px 92px,
-      transparent 93px 180px
-    ),
-    radial-gradient(circle, rgba(0, 255, 120, 0.10) 1px, transparent 2px);
-  background-size: auto, 48px 48px;
-  animation: morningstarDrift 35s linear infinite;
+  z-index: -1;
 }
 
-@keyframes morningstarDrift {
+body::before {
+  background:
+    radial-gradient(ellipse at 50% 25%,
+      rgba(0, 255, 125, .17), transparent 52%),
+    radial-gradient(ellipse at 10% 80%,
+      rgba(0, 190, 90, .15), transparent 42%),
+    linear-gradient(145deg, #17271c, #0c130f 65%, #17251b);
+}
+
+body::after {
+  inset: -35%;
+  opacity: .65;
+  background-image:
+    radial-gradient(circle,
+      rgba(95, 255, 165, .75) 1px, transparent 2px),
+    radial-gradient(circle,
+      rgba(0, 255, 120, .4) 1.5px, transparent 3px);
+  background-size: 65px 65px, 105px 105px;
+  animation: emeraldParticles 28s linear infinite;
+}
+
+@keyframes emeraldParticles {
   from { transform: translate3d(0, 0, 0) rotate(0deg); }
-  to   { transform: translate3d(5%, 5%, 0) rotate(3deg); }
+  to   { transform: translate3d(3%, -2%, 0) rotate(2deg); }
+}
+
+/* Moving 3D perspective grid */
+body {
+  background-image:
+    radial-gradient(ellipse at 50% 25%,
+      rgba(0, 255, 125, .10), transparent 52%),
+    linear-gradient(145deg, #17271c, #0c130f 65%, #17251b);
+  background-attachment: fixed;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body::before {
+  body::after {
     animation: none;
   }
 }
