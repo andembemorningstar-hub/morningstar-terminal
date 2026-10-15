@@ -26,10 +26,9 @@
   <div class="section-head"><h2>☁️ Google login & cloud sync</h2><span class="pill" id="cloudStatus">Not connected</span></div>
   <p class="muted">Connect a Firebase project once to sync this journal between devices. Local saving continues to work without cloud setup.</p>
   <div class="formgrid">
-   <div class="field"><label>Firebase API key</label><input id="fbApiKey" autocomplete="off" placeholder="Paste Firebase web config apiKey"></div>
-   <div class="field"><label>Auth domain</label><input id="fbAuthDomain" autocomplete="off" placeholder="your-project.firebaseapp.com"></div>
-   <div class="field"><label>Project ID</label><input id="fbProjectId" autocomplete="off" placeholder="your-project-id"></div>
-   <div class="field"><label>App ID</label><input id="fbAppId" autocomplete="off" placeholder="Paste Firebase web config appId"></div>
+   
+<div hidden><input id="fbApiKey"><input id="fbAuthDomain"><input id="fbProjectId"><input id="fbAppId"></div>
+   
   </div>
   <div class="actions"><button id="configureCloudBtn">Save cloud config</button><button class="primary" id="googleLoginBtn">Sign in with Google</button><button id="syncCloudBtn">Sync now</button><button id="googleLogoutBtn">Sign out</button></div>
   <div class="notice" id="cloudMessage">Setup required: create a Firebase project, enable Google sign-in and Firestore, then paste the web app config above. Cloud sync requires internet and an HTTPS-hosted page; opening the file offline still uses local storage.</div>
