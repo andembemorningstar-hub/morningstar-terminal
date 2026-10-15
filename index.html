@@ -170,7 +170,16 @@ $('#exportBtn').addEventListener('click',()=>{let keys=['date','instrument','dir
 $('#importFile').addEventListener('change',async e=>{let file=e.target.files[0];if(!file)return;try{let obj=JSON.parse(await file.text()),incoming=Array.isArray(obj)?obj:obj.trades;if(!Array.isArray(incoming))throw Error('No trades array');if(confirm(`Import ${incoming.length} trades? This replaces current trades in this browser.`)){trades=incoming;save();alert('Backup imported.')}}catch(err){alert('Could not import that backup file.')}e.target.value=''});
 
 function cloudMessage(msg,isError=false){const el=$('#cloudMessage');if(el)el.textContent=msg;const st=$('#cloudStatus');if(st){st.textContent=cloudUser?`Signed in: ${cloudUser.email||'Google account'}`:(cloudDb?'Configured · signed out':'Not connected');st.style.color=isError?'#ff7777':(cloudUser?'#a6f36b':'#91a3bc')}}
-function getCloudConfig(){return {apiKey:$('#fbApiKey').value.trim(),authDomain:$('#fbAuthDomain').value.trim(),projectId:$('#fbProjectId').value.trim(),appId:$('#fbAppId').value.trim()}}
+
+function getCloudConfig(){
+  return {
+    apiKey: "AIzaSyDUxsqxqlwN7hyowXkbeTsXR5CSQe_sPAc",
+    authDomain: "morningstar-terminal.firebaseapp.com",
+    projectId: "morningstar-terminal",
+    appId: "1:1013391159998:web:37420cf2d9925412e9e4ef"
+  };
+ }
+ 
 function loadCloudConfig(){try{const c=JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||'{}');$('#fbApiKey').value=c.apiKey||'';$('#fbAuthDomain').value=c.authDomain||'';$('#fbProjectId').value=c.projectId||'';$('#fbAppId').value=c.appId||''}catch(e){}}
 function configureCloud(){const c=getCloudConfig();if(!c.apiKey||!c.authDomain||!c.projectId||!c.appId){cloudMessage('Enter all four Firebase web config values first.',true);return false}try{localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(c));if(!window.firebase){cloudMessage('Firebase libraries could not load. Connect to the internet and reload this page.',true);return false}if(!firebase.apps.length)firebase.initializeApp(c);else {const app=firebase.app();if(app.options.projectId!==c.projectId){cloudMessage('This page already initialized a different Firebase project. Reload the page to switch projects.',true);return false}}cloudAuth=firebase.auth();cloudDb=firebase.firestore();cloudAuth.onAuthStateChanged(async user=>{cloudUser=user||null;$('#googleLoginBtn').disabled=!!user;$('#googleLogoutBtn').disabled=!user;$('#syncCloudBtn').disabled=!user;cloudMessage(user?`Signed in as ${user.email||'Google account'}. Syncing your journal…`:'Firebase configured. Sign in with Google to sync.',false);if(user){try{await syncCloud(true)}catch(e){cloudMessage('Signed in, but sync failed: '+e.message,true)}}});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
 function mergeTrades(local,remote){const map=new Map();for(const t of [...remote,...local]){const id=String(t.id??JSON.stringify(t));map.set(id,t)}return [...map.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(Number(b.id)||0)-(Number(a.id)||0))}
