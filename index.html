@@ -68,6 +68,73 @@ body {
 :root{--bg:#0b1220;--panel:#111c2e;--panel2:#17243a;--line:#26364d;--text:#eef4fc;--muted:#91a3bc;--lime:#a6f36b;--red:#ff7777;--amber:#f3bd61}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:var(--panel2);color:var(--text)}button:hover{border-color:var(--lime)}button.primary{background:var(--lime);color:#101a2a;border-color:var(--lime);font-weight:800}.wrap{max-width:1150px;margin:auto;padding:18px}.hero{background:linear-gradient(135deg,#14243a,#101a2a);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:16px}.brand{display:flex;gap:12px;align-items:center}.logo{background:var(--lime);color:#101a2a;border-radius:12px;padding:10px;font-size:22px;font-weight:900}.eyebrow{font-size:11px;letter-spacing:1.5px;color:var(--muted);font-weight:800}.hero h1{font-size:clamp(22px,4vw,32px);margin:0}.hero p{color:var(--muted);margin:5px 0 0}.hero-stats{display:flex;gap:35px;flex-wrap:wrap;margin-top:20px}.hero-stats small,.muted{color:var(--muted)}.hero-stats strong{display:block;font-size:27px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.nav button.active{border-color:var(--lime);color:var(--lime);background:#1b2b3e}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:16px;min-width:0}.card h2,.card h3{margin:0 0 12px}.metric{font-size:25px;font-weight:800}.positive{color:var(--lime)}.negative{color:var(--red)}.muted{font-size:13px}.section{margin:16px 0}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.section-head h2{margin:0;font-size:20px}.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}.field label{font-size:13px;color:var(--muted)}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;background:#0b1423;color:var(--text);padding:10px}textarea{min-height:85px;resize:vertical}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.check{background:#0b1423;border:1px solid var(--line);padding:10px;border-radius:9px}.check label{display:flex;align-items:center;gap:8px}.check input{width:auto}.trade{margin-bottom:10px}.trade-top{display:flex;justify-content:space-between;gap:10px;align-items:start}.pill{display:inline-block;padding:3px 8px;border:1px solid var(--line);border-radius:99px;font-size:12px;color:var(--muted);margin:3px 4px 3px 0}.empty{padding:30px;text-align:center;color:var(--muted)}.bar{height:8px;background:#26364d;border-radius:99px;overflow:hidden;margin-top:8px}.bar span{display:block;height:100%;background:var(--lime)}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.notice{padding:12px;border-radius:10px;background:#17243a;color:#c4d2e5;font-size:13px;margin-top:12px}.foot{color:var(--muted);font-size:12px;margin:20px 0;text-align:center}.chart-wrap{width:100%;overflow:hidden}.chart-svg{display:block;width:100%;height:auto;min-height:150px}.chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:4px 0 10px}.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.chart-subtitle{font-size:12px;color:var(--muted);margin:-6px 0 10px}.chart-grid{stroke:#26364d;stroke-width:1}.chart-label{fill:#91a3bc;font-size:10px}.chart-zero{stroke:#91a3bc;stroke-dasharray:4 4;opacity:.7}.bar-positive{fill:#a6f36b}.bar-negative{fill:#ff7777}.bar-neutral{fill:#f3bd61}
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap{padding:12px}.formgrid,.checks{grid-template-columns:1fr}.hero{padding:16px}.hero-stats{gap:22px}}
+
+/* MORNINGSTAR TERMINAL — EMERALD GLASS 3D */
+:root {
+  --bg: #101a14;
+  --panel: rgba(23, 40, 29, 0.88);
+  --panel2: rgba(30, 53, 37, 0.94);
+  --line: rgba(90, 230, 140, 0.24);
+  --lime: #72ffad;
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(0,255,120,.15), transparent 42%),
+    radial-gradient(ellipse at 85% 75%, rgba(0,200,100,.12), transparent 44%),
+    linear-gradient(135deg, #101a14, #17251b 50%, #0d1510);
+  background-attachment: fixed;
+}
+
+.hero {
+  background: linear-gradient(135deg,
+    rgba(32,65,43,.92),
+    rgba(16,29,20,.94));
+  border-color: rgba(100,255,155,.32);
+  box-shadow: 0 12px 35px rgba(0,0,0,.24),
+              inset 0 1px rgba(255,255,255,.06);
+}
+
+.card {
+  background: linear-gradient(145deg,
+    rgba(29,49,35,.94),
+    rgba(17,30,21,.96));
+  border: 1px solid rgba(100,255,155,.22);
+  box-shadow: 0 8px 22px rgba(0,0,0,.20),
+              inset 0 1px rgba(255,255,255,.045);
+  transition: transform .25s ease, border-color .25s ease,
+              box-shadow .25s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(100,255,155,.48);
+  box-shadow: 0 14px 30px rgba(0,0,0,.28),
+              0 0 18px rgba(0,255,120,.06);
+}
+
+.nav button {
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.nav button.active {
+  background: rgba(54,111,70,.65);
+  box-shadow: 0 0 14px rgba(0,255,120,.08);
+}
+
+button, input, select, textarea {
+  backdrop-filter: blur(8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+                                             }
+ 
 </style>
 </head>
 <body>
