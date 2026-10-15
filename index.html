@@ -180,7 +180,15 @@ function getCloudConfig(){
   };
  }
  
-function loadCloudConfig(){try{const c=JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||'{}');$('#fbApiKey').value=c.apiKey||'';$('#fbAuthDomain').value=c.authDomain||'';$('#fbProjectId').value=c.projectId||'';$('#fbAppId').value=c.appId||''}catch(e){}}
+
+function loadCloudConfig(){
+  const c = getCloudConfig();
+  $('#fbApiKey').value = c.apiKey;
+  $('#fbAuthDomain').value = c.authDomain;
+  $('#fbProjectId').value = c.projectId;
+  $('#fbAppId').value = c.appId;
+ }
+ 
 function configureCloud(){const c=getCloudConfig();if(!c.apiKey||!c.authDomain||!c.projectId||!c.appId){cloudMessage('Enter all four Firebase web config values first.',true);return false}try{localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(c));if(!window.firebase){cloudMessage('Firebase libraries could not load. Connect to the internet and reload this page.',true);return false}if(!firebase.apps.length)firebase.initializeApp(c);else {const app=firebase.app();if(app.options.projectId!==c.projectId){cloudMessage('This page already initialized a different Firebase project. Reload the page to switch projects.',true);return false}}cloudAuth=firebase.auth();cloudDb=firebase.firestore();cloudAuth.onAuthStateChanged(async user=>{cloudUser=user||null;$('#googleLoginBtn').disabled=!!user;$('#googleLogoutBtn').disabled=!user;$('#syncCloudBtn').disabled=!user;cloudMessage(user?`Signed in as ${user.email||'Google account'}. Syncing your journal…`:'Firebase configured. Sign in with Google to sync.',false);if(user){try{await syncCloud(true)}catch(e){cloudMessage('Signed in, but sync failed: '+e.message,true)}}});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
 function mergeTrades(local,remote){const map=new Map();for(const t of [...remote,...local]){const id=String(t.id??JSON.stringify(t));map.set(id,t)}return [...map.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(Number(b.id)||0)-(Number(a.id)||0))}
 function getDeletedIds(){try{return JSON.parse(localStorage.getItem(DELETED_KEY)||'[]').map(String)}catch(e){return []}}
