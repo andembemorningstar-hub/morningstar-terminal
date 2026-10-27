@@ -24,38 +24,26 @@ body::after {
   z-index: -1;
 }
 
+
 body::before {
-  background:
-    radial-gradient(ellipse at 50% 25%,
-      rgba(0, 255, 125, .17), transparent 52%),
-    radial-gradient(ellipse at 10% 80%,
-      rgba(0, 190, 90, .15), transparent 42%),
-    linear-gradient(145deg, #17271c, #0c130f 65%, #17251b);
+  background: none;
 }
 
 body::after {
-  inset: -35%;
-  opacity: .65;
-  background-image:
-    radial-gradient(circle,
-      rgba(95, 255, 165, .75) 1px, transparent 2px),
-    radial-gradient(circle,
-      rgba(0, 255, 120, .4) 1.5px, transparent 3px);
-  background-size: 65px 65px, 105px 105px;
-  animation: emeraldParticles 28s linear infinite;
+  background: none;
 }
 
 @keyframes emeraldParticles {
-  from { transform: translate3d(0, 0, 0) rotate(0deg); }
-  to   { transform: translate3d(3%, -2%, 0) rotate(2deg); }
+  from { transform: none; }
+  to { transform: none; }
 }
 
-/* Moving 3D perspective grid */
+
+
+/* Deep-black background */
 body {
-  background-image:
-    radial-gradient(ellipse at 50% 25%,
-      rgba(0, 255, 125, .10), transparent 52%),
-    linear-gradient(145deg, #17271c, #0c130f 65%, #17251b);
+  background-color: #020308;
+  background-image: none;
   background-attachment: fixed;
 }
 
@@ -69,22 +57,92 @@ body {
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:var(--panel2);color:var(--text)}button:hover{border-color:var(--lime)}button.primary{background:var(--lime);color:#101a2a;border-color:var(--lime);font-weight:800}.wrap{max-width:1150px;margin:auto;padding:18px}.hero{background:linear-gradient(135deg,#14243a,#101a2a);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:16px}.brand{display:flex;gap:12px;align-items:center}.logo{background:var(--lime);color:#101a2a;border-radius:12px;padding:10px;font-size:22px;font-weight:900}.eyebrow{font-size:11px;letter-spacing:1.5px;color:var(--muted);font-weight:800}.hero h1{font-size:clamp(22px,4vw,32px);margin:0}.hero p{color:var(--muted);margin:5px 0 0}.hero-stats{display:flex;gap:35px;flex-wrap:wrap;margin-top:20px}.hero-stats small,.muted{color:var(--muted)}.hero-stats strong{display:block;font-size:27px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.nav button.active{border-color:var(--lime);color:var(--lime);background:#1b2b3e}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:16px;min-width:0}.card h2,.card h3{margin:0 0 12px}.metric{font-size:25px;font-weight:800}.positive{color:var(--lime)}.negative{color:var(--red)}.muted{font-size:13px}.section{margin:16px 0}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.section-head h2{margin:0;font-size:20px}.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}.field label{font-size:13px;color:var(--muted)}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;background:#0b1423;color:var(--text);padding:10px}textarea{min-height:85px;resize:vertical}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.check{background:#0b1423;border:1px solid var(--line);padding:10px;border-radius:9px}.check label{display:flex;align-items:center;gap:8px}.check input{width:auto}.trade{margin-bottom:10px}.trade-top{display:flex;justify-content:space-between;gap:10px;align-items:start}.pill{display:inline-block;padding:3px 8px;border:1px solid var(--line);border-radius:99px;font-size:12px;color:var(--muted);margin:3px 4px 3px 0}.empty{padding:30px;text-align:center;color:var(--muted)}.bar{height:8px;background:#26364d;border-radius:99px;overflow:hidden;margin-top:8px}.bar span{display:block;height:100%;background:var(--lime)}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.notice{padding:12px;border-radius:10px;background:#17243a;color:#c4d2e5;font-size:13px;margin-top:12px}.foot{color:var(--muted);font-size:12px;margin:20px 0;text-align:center}.chart-wrap{width:100%;overflow:hidden}.chart-svg{display:block;width:100%;height:auto;min-height:150px}.chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:4px 0 10px}.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.chart-subtitle{font-size:12px;color:var(--muted);margin:-6px 0 10px}.chart-grid{stroke:#26364d;stroke-width:1}.chart-label{fill:#91a3bc;font-size:10px}.chart-zero{stroke:#91a3bc;stroke-dasharray:4 4;opacity:.7}.bar-positive{fill:#a6f36b}.bar-negative{fill:#ff7777}.bar-neutral{fill:#f3bd61}
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap{padding:12px}.formgrid,.checks{grid-template-columns:1fr}.hero{padding:16px}.hero-stats{gap:22px}}
 
-/* MORNINGSTAR TERMINAL — EMERALD GLASS 3D */
+
+/* MORNINGSTAR TERMINAL — DEEP BLACK 3D SHOOTING STARS */
 :root {
-  --bg: #101a14;
-  --panel: rgba(23, 40, 29, 0.88);
-  --panel2: rgba(30, 53, 37, 0.94);
-  --line: rgba(90, 230, 140, 0.24);
-  --lime: #72ffad;
+  --bg: #030407;
+  --panel: rgba(10, 12, 20, 0.90);
+  --panel2: rgba(16, 19, 30, 0.96);
+  --line: rgba(120, 160, 255, 0.20);
+  --lime: #8eb8ff;
 }
 
 body {
+  position: relative;
+  isolation: isolate;
   background:
-    radial-gradient(ellipse at 15% 15%, rgba(0,255,120,.15), transparent 42%),
-    radial-gradient(ellipse at 85% 75%, rgba(0,200,100,.12), transparent 44%),
-    linear-gradient(135deg, #101a14, #17251b 50%, #0d1510);
+    radial-gradient(ellipse at 50% 50%, rgba(20, 28, 55, 0.22), transparent 65%),
+    linear-gradient(180deg, #020308 0%, #050711 55%, #010206 100%);
   background-attachment: fixed;
+  overflow-x: hidden;
 }
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: -50%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+body::before {
+  opacity: 0.65;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, #ffffff 99%, transparent),
+    radial-gradient(1px 1px at 30% 70%, #9dbdff 99%, transparent),
+    radial-gradient(2px 2px at 70% 35%, #ffffff 99%, transparent),
+    radial-gradient(1px 1px at 85% 80%, #c6d8ff 99%, transparent),
+    radial-gradient(1px 1px at 55% 15%, #ffffff 99%, transparent),
+    radial-gradient(2px 2px at 20% 90%, #8eb8ff 99%, transparent);
+  background-size: 340px 340px, 420px 420px, 500px 500px,
+                   380px 380px, 460px 460px, 560px 560px;
+  animation: starfieldDrift 90s linear infinite;
+}
+
+body::after {
+  inset: auto;
+  top: -20%;
+  left: 65%;
+  width: 2px;
+  height: 180px;
+  opacity: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(190,215,255,0.95),
+    rgba(255,255,255,0)
+  );
+  box-shadow: 0 0 12px 2px rgba(110,160,255,0.35);
+  transform: rotate(45deg);
+  animation: shootingStar 7s ease-in-out infinite;
+}
+
+@keyframes starfieldDrift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-80px, 60px, 0); }
+}
+
+@keyframes shootingStar {
+  0%, 65%, 100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(45deg);
+  }
+  68% { opacity: 1; }
+  82% {
+    opacity: 0;
+    transform: translate3d(-650px, 650px, 0) rotate(45deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none;
+  }
+}
+
 
 .hero {
   background: linear-gradient(135deg,
@@ -197,14 +255,31 @@ service cloud.firestore {
   <div class="field"><label>Realized P&amp;L ($)</label><input name="pnl" type="number" step="0.01" placeholder="e.g. 20 or -10" required></div>
   <div class="field"><label>Emotional state</label><select name="emotion"><option>Calm</option><option>Fear / early exit</option><option>FOMO / impatience</option><option>Revenge / frustration</option><option>Greed / overconfidence</option></select></div>
  </div>
- <h3>Setup checklist</h3><p class="muted">Mark what was true before entry.</p>
- <div class="checks">
-  <div class="check"><label><input type="checkbox" name="bias"> 30M bias clear</label></div>
-  <div class="check"><label><input type="checkbox" name="sweep"> Relevant liquidity swept</label></div>
-  <div class="check"><label><input type="checkbox" name="bos"> 5M/15M BOS confirmed</label></div>
-  <div class="check"><label><input type="checkbox" name="fvg"> Valid OB + FVG / retracement</label></div>
-  <div class="check"><label><input type="checkbox" name="rules"> Followed risk and execution rules</label></div>
- </div>
+ 
+<h3>Setup checklist</h3>
+<p class="muted">Mark what was true before entry.</p>
+
+<div class="checks">
+  <div class="check">
+    <label><input type="checkbox" name="bias"> 30M bias clear</label>
+  </div>
+  <div class="check">
+    <label><input type="checkbox" name="sweep"> Relevant liquidity swept</label>
+  </div>
+  <div class="check">
+    <label><input type="checkbox" name="bos"> 5M/15M BOS confirmed</label>
+  </div>
+  <div class="check">
+    <label><input type="checkbox" name="fvg"> Valid OB + FVG / retracement</label>
+  </div>
+  <div class="check">
+    <label><input type="checkbox" name="trendlines"> Valid trendline setup</label>
+  </div>
+  <div class="check">
+    <label><input type="checkbox" name="rules"> Followed risk and execution rules</label>
+  </div>
+</div>
+
  <div class="field section"><label>Primary mistake</label><select name="mistake"><option>None</option><option>Early entry</option><option>Early exit</option><option>Moved SL / BE too early</option><option>Oversized risk</option><option>Revenge trade</option><option>Copied another trader</option><option>No valid setup</option><option>Chased missed move</option><option>Other</option></select></div>
  <div class="field"><label>Post-trade notes</label><textarea name="notes" placeholder="Why did I enter? Did I follow my model? What should I repeat or change?"></textarea></div>
  <h3>Trade screenshots</h3><p class="muted">Attach chart screenshots before entry and after exit. Images are resized to reduce storage use and saved with this trade. They are included in JSON backups and cloud sync, but use storage space.</p>
