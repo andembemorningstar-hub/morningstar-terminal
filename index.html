@@ -84,9 +84,10 @@ body > * {
   z-index: 0;
 }
 
+
 .shooting-stars span {
   position: absolute;
-  top: -20%;
+  top: var(--start-y, -20%);
   left: var(--start-x);
   width: 3px;
   height: var(--length, 150px);
@@ -99,35 +100,55 @@ body > * {
     rgba(220, 235, 255, 0.95) 75%,
     #fff 100%
   );
-  box-shadow: 0 0 8px 2px rgba(145, 190, 255, 0.35);
-  transform: rotate(45deg);
+  box-shadow: 0 0 8px 2px rgba(145, 190, 255, 0.4);
+  transform: rotate(var(--angle, 45deg));
   transform-origin: top center;
-  animation: shootingStar 5s linear infinite;
-  animation-delay: var(--delay);
+  animation: var(--motion, shootingDown) 5s linear infinite;
+  animation-delay: var(--delay, 0s);
+  will-change: transform, opacity;
 }
+
 
 @keyframes starfieldDrift {
   from { transform: translate3d(0, 0, 0); }
   to   { transform: translate3d(-80px, 60px, 0); }
 }
 
-@keyframes shootingStar {
+
+@keyframes shootingDown {
   0%, 4% {
     opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(45deg);
+    transform: translate(0, 0) rotate(var(--angle, 45deg));
   }
   7% {
     opacity: 0.95;
   }
-  20% {
+  20%, 100% {
     opacity: 0;
-    transform: translate3d(-220px, 220px, 0) rotate(45deg);
-  }
-  21%, 100% {
-    opacity: 0;
-    transform: translate3d(-220px, 220px, 0) rotate(45deg);
+    transform: translate(
+      var(--travel-x, -220px),
+      var(--travel-y, 220px)
+    ) rotate(var(--angle, 45deg));
   }
 }
+
+@keyframes shootingUp {
+  0%, 4% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(var(--angle, 135deg));
+  }
+  7% {
+    opacity: 0.95;
+  }
+  20%, 100% {
+    opacity: 0;
+    transform: translate(
+      var(--travel-x, 220px),
+      var(--travel-y, -220px)
+    ) rotate(var(--angle, 135deg));
+  }
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   body::before,
@@ -205,7 +226,7 @@ body::after {
   );
   box-shadow: 0 0 12px 2px rgba(110,160,255,0.35);
   transform: rotate(45deg);
-  animation: shootingStar 7s ease-in-out infinite;
+  animation: none;
 }
 
 @keyframes starfieldDrift {
@@ -286,14 +307,42 @@ button, input, select, textarea {
 </head>
 <body>
  
+
+
 <div class="shooting-stars" aria-hidden="true">
-  <span style="--start-x: 18%; --delay: 0s; --length: 150px"></span>
-  <span style="--start-x: 42%; --delay: 0.83s; --length: 190px"></span>
-  <span style="--start-x: 68%; --delay: 1.66s; --length: 140px"></span>
-  <span style="--start-x: 88%; --delay: 2.49s; --length: 180px"></span>
-  <span style="--start-x: 53%; --delay: 3.32s; --length: 160px"></span>
-  <span style="--start-x: 30%; --delay: 4.15s; --length: 200px"></span>
+  <span style="--start-x:5%;--start-y:-20%;--delay:0s;--length:150px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
+  <span style="--start-x:18%;--start-y:80%;--delay:.17s;--length:190px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
+  <span style="--start-x:32%;--start-y:-10%;--delay:.34s;--length:140px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
+  <span style="--start-x:46%;--start-y:80%;--delay:.51s;--length:180px;--motion:shootingUp;--angle:-135deg;--travel-x:-220px;--travel-y:-220px"></span>
+  <span style="--start-x:60%;--start-y:-20%;--delay:.68s;--length:160px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
+  <span style="--start-x:74%;--start-y:80%;--delay:.85s;--length:200px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
+  <span style="--start-x:88%;--start-y:-15%;--delay:1.02s;--length:145px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
+  <span style="--start-x:12%;--start-y:80%;--delay:1.19s;--length:175px;--motion:shootingUp;--angle:-135deg;--travel-x:-220px;--travel-y:-220px"></span>
+  <span style="--start-x:26%;--start-y:-20%;--delay:1.36s;--length:155px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
+  <span style="--start-x:40%;--start-y:80%;--delay:1.53s;--length:210px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
+  <span style="--start-x:54%;--start-y:-10%;--delay:1.70s;--length:135px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
+  <span style="--start-x:68%;--start-y:80%;--delay:1.87s;--length:185px;--motion:shootingUp;--angle:-135deg;--travel-x:-220px;--travel-y:-220px"></span>
+  <span style="--start-x:82%;--start-y:-20%;--delay:2.04s;--length:165px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
+  <span style="--start-x:95%;--start-y:80%;--delay:2.21s;--length:195px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
+  <span style="--start-x:8%;--start-y:-15%;--delay:2.38s;--length:145px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
+  <span style="--start-x:22%;--start-y:80%;--delay:2.55s;--length:200px;--motion:shootingUp;--angle:-135deg;--travel-x:-220px;--travel-y:-220px"></span>
+  <span style="--start-x:36%;--start-y:-20%;--delay:2.72s;--length:160px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
+  <span style="--start-x:50%;--start-y:80%;--delay:2.89s;--length:180px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
+  <span style="--start-x:64%;--start-y:-10%;--delay:3.06s;--length:150px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
+  <span style="--start-x:78%;--start-y:80%;--delay:3.23s;--length:205px;--motion:shootingUp;--angle:-135deg;--travel-x:-220px;--travel-y:-220px"></span>
+  <span style="--start-x:92%;--start-y:-20%;--delay:3.40s;--length:140px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
+  <span style="--start-x:15%;--start-y:80%;--delay:3.57s;--length:185px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
+  <span style="--start-x:29%;--start-y:-15%;--delay:3.74s;--length:155px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
+  <span style="--start-x:43%;--start-y:80%;--delay:3.91s;--length:195px;--motion:shootingUp;--angle:-135deg;--travel-x:-220px;--travel-y:-220px"></span>
+  <span style="--start-x:57%;--start-y:-20%;--delay:4.08s;--length:145px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
+  <span style="--start-x:71%;--start-y:80%;--delay:4.25s;--length:175px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
+  <span style="--start-x:85%;--start-y:-10%;--delay:4.42s;--length:160px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
+  <span style="--start-x:10%;--start-y:80%;--delay:4.59s;--length:210px;--motion:shootingUp;--angle:-135deg;--travel-x:-220px;--travel-y:-220px"></span>
+  <span style="--start-x:48%;--start-y:-20%;--delay:4.76s;--length:135px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
+  <span style="--start-x:80%;--start-y:80%;--delay:4.93s;--length:190px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
 </div>
+
+
 
 <div class="wrap">
 <header class="hero">
