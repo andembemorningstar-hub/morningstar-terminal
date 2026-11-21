@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101a2a">
-<title>Morningstar Terminal — Trading Journal</title>
+<title>Morningstar Journal — Trading Journal</title>
 <style>
  
 /* MORNINGSTAR TERMINAL — EMERALD 3D */
@@ -303,6 +303,240 @@ button, input, select, textarea {
   }
                                              }
  
+
+/* MONTHLY TRADING CALENDAR */
+.calendar-card{background:linear-gradient(145deg,rgba(12,14,22,.96),rgba(5,7,12,.97));border:1px solid rgba(142,184,255,.17);border-radius:16px;padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.035)}
+.calendar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.calendar-month{font-size:18px;font-weight:800;letter-spacing:.2px}
+.calendar-nav{display:flex;gap:7px}
+.calendar-nav button{min-width:38px;padding:7px 10px;background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.09)}
+.calendar-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.calendar-weekday{text-align:center;color:#778092;font-size:11px;font-weight:800;letter-spacing:1px;padding:3px 0 5px}
+.calendar-day{min-width:0;min-height:76px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;padding:9px;border:1px solid rgba(255,255,255,.055);border-radius:13px;background:#050609;color:#e9edf5;transition:border-color .15s,transform .15s,filter .15s}
+.calendar-day:hover{transform:translateY(-2px);border-color:rgba(142,184,255,.5)}
+.calendar-day .day-number{font-size:12px;color:#aab1bf}
+.calendar-day .day-pnl{font-size:12px;font-weight:800;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.calendar-day.profit{background:linear-gradient(145deg,rgba(20,73,55,.94),rgba(10,42,33,.98));border-color:rgba(35,190,137,.18)}
+.calendar-day.loss{background:linear-gradient(145deg,rgba(78,39,40,.94),rgba(43,24,27,.98));border-color:rgba(255,119,119,.16)}
+.calendar-day.profit .day-pnl{color:#25c995}.calendar-day.loss .day-pnl{color:#ff7777}
+.calendar-day.selected{outline:2px solid #8eb8ff;outline-offset:1px}
+.calendar-day.today .day-number::after{content:' · TODAY';font-size:9px;color:#8eb8ff;font-weight:800}
+.calendar-empty{min-height:76px}
+.calendar-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.calendar-stat{min-width:0;padding:10px;border-radius:11px;background:rgba(255,255,255,.025)}
+.calendar-stat small{display:block;color:#858d9d;font-size:10px;font-weight:800;letter-spacing:.8px;white-space:nowrap}
+.calendar-stat strong{display:block;margin-top:3px;font-size:15px;overflow-wrap:anywhere}
+.calendar-details{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.calendar-details h3{margin:0 0 10px;font-size:15px}
+@media(max-width:760px){.calendar-card{padding:11px}.calendar-grid{gap:5px}.calendar-day{min-height:64px;padding:7px 5px;border-radius:10px}.calendar-day .day-pnl{font-size:10px}.calendar-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-stat:last-child{grid-column:span 2}}
+
+/* MORNINGSTAR TERMINAL — DEEP BLACK THEME */
+:root {
+  --bg: #020204;
+  --panel: #090a0e;
+  --panel2: #11131a;
+  --line: #20232d;
+  --text: #edf0f7;
+  --muted: #9299aa;
+  --lime: #8eb8ff;
+}
+
+/* Main background */
+body {
+  background: #020204 !important;
+  color: #edf0f7;
+}
+
+/* Header */
+.hero {
+  background: linear-gradient(145deg, #090a0e, #030407) !important;
+  border: 1px solid #20232d !important;
+  box-shadow: 0 12px 35px rgba(0,0,0,.55) !important;
+}
+
+/* All dashboard cards and panels */
+.card {
+  background: linear-gradient(145deg, #0c0d12, #050609) !important;
+  border: 1px solid #20232d !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,.4) !important;
+}
+
+.card:hover {
+  border-color: #39445a !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,.6) !important;
+}
+
+/* Navigation */
+.nav button.active {
+  background: #151923 !important;
+  color: #8eb8ff !important;
+  border-color: #526b96 !important;
+  box-shadow: none !important;
+}
+
+/* Buttons */
+button.primary {
+  background: #8eb8ff !important;
+  color: #05070c !important;
+  border-color: #8eb8ff !important;
+}
+
+button:hover {
+  border-color: #8eb8ff;
+}
+
+/* Logo */
+.logo {
+  background: #8eb8ff !important;
+  color: #05070c !important;
+}
+
+/* Input fields and notices */
+input, select, textarea, .check {
+  background: #07080c !important;
+  border-color: #252936 !important;
+  color: #edf0f7 !important;
+}
+
+.notice {
+  background: #10131b !important;
+  color: #c4ccdc !important;
+}
+
+/* Keep profit/loss calendar colors meaningful */
+.calendar-day.profit {
+  background: linear-gradient(145deg, #124333, #09271e) !important;
+}
+
+.calendar-day.loss {
+  background: linear-gradient(145deg, #4a2529, #281619) !important;
+}
+/* TODAY'S DASHBOARD */
+#todayDashboard {
+  margin-top: 22px;
+}
+
+.today-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.today-box {
+  background: #111113;
+  border: 1px solid #242428;
+  border-radius: 16px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.today-box small {
+  display: block;
+  color: #77777f;
+  font-size: 11px;
+  letter-spacing: .7px;
+  margin-bottom: 7px;
+}
+
+.today-box strong {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  color: #00bd78;
+}
+
+.today-label {
+  display: inline !important;
+  font-size: 13px !important;
+  color: #77777f !important;
+  font-weight: 400 !important;
+}
+
+.today-block {
+  margin-top: 26px;
+}
+
+.today-block h3 {
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.session-row {
+  padding: 13px 0;
+  border-bottom: 1px solid #242428;
+}
+
+.session-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.session-info .session-result {
+  color: #00bd78;
+  text-align: right;
+}
+
+.session-bar {
+  height: 9px;
+  background: #202024;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.session-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 20px;
+  background: #00bd78;
+}
+
+.recent-trade {
+  display: grid;
+  grid-template-columns: 27px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px dashed #242428;
+  font-size: 13px;
+}
+
+.trade-result {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  font-weight: 800;
+}
+
+.trade-result.win {
+  background: #063b27;
+  color: #00d58a;
+}
+
+.trade-result.loss {
+  background: #451b1b;
+  color: #ff7777;
+}
+
+.recent-trade .trade-pnl {
+  text-align: right;
+  font-weight: 700;
+}
+
+@media(max-width:480px) {
+  .today-box {
+    padding: 13px;
+  }
+
+  .today-box strong {
+    font-size: 19px;
+  }
+}
 </style>
 </head>
 <body>
@@ -346,7 +580,11 @@ button, input, select, textarea {
 
 <div class="wrap">
 <header class="hero">
- <div class="brand"><div class="logo">M</div><div><div class="eyebrow">PERSONAL TRADING PERFORMANCE SYSTEM</div><h1>MORNINGSTAR TERMINAL</h1><p>Trade the plan. Track the evidence. Fix the pattern.</p></div></div>
+<div class="brand">
+  <div>
+    <h1 id="welcomeGreeting">Welcome</h1>
+  </div>
+</div>
  <div class="hero-stats"><div><small>NET P&amp;L</small><strong id="heroPnl">$0.00</strong></div><div><small>TRADES LOGGED</small><strong id="heroCount">0</strong></div><div><small>RULE COMPLIANCE</small><strong id="heroCompliance">—</strong></div></div>
 </header>
 <nav class="nav" id="nav">
@@ -377,7 +615,39 @@ service cloud.firestore {
    <p class="muted">Firebase web config identifies your project; it is not a private server secret. Never publish service-account credentials. Add your deployed website domain under Firebase Authentication → Settings → Authorized domains.</p>
   </details>
  </div>
+ <!-- TODAY'S PERFORMANCE -->
+<div class="section" id="todayDashboard">
+  <div class="eyebrow">TODAY</div>
+
+  <div class="today-summary">
+    <div class="today-box">
+      <small>TODAY'S P&L</small>
+      <strong id="todayPnl">+$0.00</strong>
+    </div>
+    <div class="today-box">
+      <small>TRADES</small>
+      <strong><span id="todayTrades">0</span> <span class="today-label">today</span></strong>
+    </div>
+  </div>
+
+  <div class="today-block">
+    <h3>Session Performance</h3>
+    <div id="sessionPerformance"></div>
+  </div>
+
+  <div class="today-block">
+    <h3>Recent Trades</h3>
+    <div id="recentTrades"></div>
+  </div>
+</div>
  <div class="grid section" id="metrics"></div>
+  <div class="calendar-card section" id="monthlyCalendar">
+   <div class="calendar-head"><div><div class="eyebrow">TRADING ACTIVITY</div><div class="calendar-month" id="calendarMonthLabel">Monthly performance</div></div><div class="calendar-nav"><button type="button" id="calendarPrev" aria-label="Previous month">‹</button><button type="button" id="calendarNext" aria-label="Next month">›</button></div></div>
+   <div class="calendar-grid" id="calendarGrid" aria-label="Monthly trading calendar"></div>
+   <div class="calendar-summary" id="calendarSummary"></div>
+   <div class="calendar-details" id="calendarDetails"><div class="muted">Select a date to inspect the trades recorded for that day.</div></div>
+  </div>
+
  <div class="grid two section">
   <div class="card"><h3>Equity curve</h3><div id="equity"></div></div>
   <div class="card"><h3>Account settings</h3><div class="field"><label>Starting balance ($)</label><input id="starting" type="number" value="2000" min="0"></div><div class="field"><label>Planned risk per trade (%)</label><input id="riskPct" type="number" value="0.5" min="0" step="0.1"></div><p class="muted">Planned risk: <strong id="riskDollars">$10.00</strong></p><div class="actions"><button id="exportBtn">Export CSV</button><button id="backupBtn">Download backup</button><label for="importFile"><span class="hidden">Import backup</span><button type="button" onclick="document.getElementById('importFile').click()">Import backup</button></label><input id="importFile" type="file" accept=".json,application/json" class="hidden"></div><div class="notice">Your trades save locally on this device. When Google cloud sync is connected, the same trades and account settings sync to your account. Keep backups regularly.</div></div>
@@ -451,7 +721,19 @@ service cloud.firestore {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const KEY='morningstar_terminal_trades_v1'; const CLOUD_CONFIG_KEY='morningstar_firebase_config_v1'; const DELETED_KEY='morningstar_deleted_trade_ids_v1'; let trades=[]; let cloudAuth=null, cloudDb=null, cloudUser=null, cloudBusy=false;
+const KEY='morningstar_terminal_trades_v1';
+const CLOUD_CONFIG_KEY='morningstar_firebase_config_v1';
+const DELETED_KEY='morningstar_deleted_trade_ids_v1';
+
+const ACCOUNTS_KEY='morningstar_accounts_v1';
+const ACTIVE_ACCOUNT_KEY='morningstar_active_account_v1';
+
+let accounts=[];
+let activeAccountId='main';
+let allAccountsView=false;
+let trades=[];
+
+let cloudAuth=null, cloudDb=null, cloudUser=null, cloudBusy=false;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const money=n=>(n<0?'−':'')+'$'+Math.abs(n||0).toFixed(2);
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -486,6 +768,7 @@ function render(){
  if(!trades.length)$('#equity').innerHTML=noData();else {let chronological=trades.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(Number(a.id)||0)-(Number(b.id)||0)),runP=0,runR=0,labels=[],pVals=[],rVals=[];chronological.forEach((t,i)=>{runP+=Number(t.pnl)||0;runR+=Number(t.r)||0;labels.push((t.date||'Trade')+' #'+(i+1));pVals.push(runP);rVals.push(runR)});$('#equity').innerHTML=`<div class="muted">Starting ${money(start)} · Current ${money(start+s.net)} · Net ${money(s.net)} / ${sum(trades,t=>t.r).toFixed(2)}R cumulative</div><div class="chart-legend"><span><i class="legend-dot" style="background:#a6f36b"></i>Cumulative P&amp;L ($)</span></div>${lineChart([{values:pVals}],labels,['#a6f36b'],'Cumulative P&L in dollars')}<div class="chart-legend"><span><i class="legend-dot" style="background:#64b5ff"></i>Cumulative R</span></div>${lineChart([{values:rVals}],labels,['#64b5ff'],'Cumulative R multiple')}<div class="muted">Chronological cumulative realized P&amp;L and R; excludes deposits and withdrawals. R is calculated as realized P&amp;L divided by risked amount per trade.</div>`}
  $('#latest').innerHTML=trades.length?trades.slice(0,3).map(tradeCard).join(''):noData();
  applyFilters();
+  renderCalendar();
  $('#analyticsMetrics').innerHTML=metric('Net P&L',money(s.net))+metric('Average P&L',money(s.n?s.net/s.n:0))+metric('Gross profit',money(s.gp))+metric('Gross loss',money(-s.gl))+metric('Net R',sum(trades,t=>t.r).toFixed(2)+'R','Sum of realized R multiples')+metric('Expectancy',money(s.n?s.net/s.n:0),`${s.avgR.toFixed(2)}R average per trade`);
  const daily=periodTotals('day').slice(-14),monthly=periodTotals('month').slice(-12);
  $('#dailyPnlChart').innerHTML=daily.length?`<div class="chart-legend"><span><i class="legend-dot" style="background:#a6f36b"></i>Daily P&amp;L ($)</span></div>${lineChart([{values:daily.map(x=>x[1].pnl)}],daily.map(x=>x[0]),['#a6f36b'],'Daily realized P&L in dollars')}<div class="chart-legend"><span><i class="legend-dot" style="background:#64b5ff"></i>Daily R</span></div>${lineChart([{values:daily.map(x=>x[1].r)}],daily.map(x=>x[0]),['#64b5ff'],'Daily realized R multiple')}`:noData();
@@ -502,6 +785,53 @@ function render(){
  $('#reviewMetrics').innerHTML=metric('Rule violations',trades.filter(t=>!t.rules).length)+metric('Emotional trades',trades.filter(t=>t.emotion!=='Calm').length);
  let ms=[...new Set(trades.map(t=>t.mistake).filter(x=>x&&x!=='None'))];$('#mistakeReview').innerHTML=ms.length?ms.map(m=>barRow(m,trades.filter(t=>t.mistake===m).length,Math.max(1,...ms.map(x=>trades.filter(t=>t.mistake===x).length)),`${trades.filter(t=>t.mistake===m).length} trades`)).join(''):noData('No recorded mistakes yet. Keep logging honestly.');
 }
+
+// Monthly calendar: aggregates the existing journal records; it does not create a second data store.
+let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let selectedCalendarDate = '';
+const calendarMoney = n => (n > 0 ? '+' : n < 0 ? '−' : '') + '$' + Math.abs(n || 0).toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:0});
+const localDateKey = (y,m,d) => `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+function renderCalendar(){
+ const grid=$('#calendarGrid'); if(!grid)return;
+ const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();
+ $('#calendarMonthLabel').textContent=calendarMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+ const names=['MON','TUE','WED','THU','FRI'];
+ let html=names.map(n=>`<div class="calendar-weekday">${n}</div>`).join('');
+ const daysInMonth=new Date(y,m+1,0).getDate();
+ let firstBusinessDay=1; while(firstBusinessDay<=daysInMonth && [0,6].includes(new Date(y,m,firstBusinessDay).getDay())) firstBusinessDay++;
+ const offset=firstBusinessDay<=daysInMonth?(new Date(y,m,firstBusinessDay).getDay()+6)%7:0;
+ for(let i=0;i<offset;i++) html+='<div class="calendar-empty" aria-hidden="true"></div>';
+ const daily=new Map();
+ for(const t of trades){if(!t.date||!String(t.date).startsWith(`${y}-${String(m+1).padStart(2,'0')}-`))continue;const a=daily.get(t.date)||{pnl:0,count:0,trades:[]};a.pnl+=Number(t.pnl)||0;a.count++;a.trades.push(t);daily.set(t.date,a)}
+ const today=new Date();
+ for(let d=1;d<=daysInMonth;d++){
+  const dow=new Date(y,m,d).getDay(); if(dow===0||dow===6)continue;
+  const key=localDateKey(y,m,d),a=daily.get(key),pnl=a?.pnl||0;
+  const cls=[a?(pnl>0?'profit':pnl<0?'loss':''):'',selectedCalendarDate===key?'selected':'',y===today.getFullYear()&&m===today.getMonth()&&d===today.getDate()?'today':''].filter(Boolean).join(' ');
+  const amount=a?`<span class="day-pnl">${calendarMoney(pnl)}</span>`:'<span class="day-pnl"></span>';
+  html+=`<button type="button" class="calendar-day ${cls}" data-calendar-date="${key}" aria-label="${key}${a?`, ${a.count} trades, ${calendarMoney(pnl)}`:', no trades'}"><span class="day-number">${d}</span>${amount}</button>`;
+ }
+ grid.innerHTML=html;
+ const days=[...daily.entries()].map(([date,a])=>({date,...a}));
+ const winDays=days.filter(a=>a.pnl>0),lossDays=days.filter(a=>a.pnl<0);
+ const best=days.length?days.reduce((a,b)=>b.pnl>a.pnl?b:a):null;
+ const worst=days.length?days.reduce((a,b)=>b.pnl<a.pnl?b:a):null;
+ const total=days.reduce((v,a)=>v+a.pnl,0);
+ const items=[['MONTH P&L',calendarMoney(total),total>=0?'positive':'negative'],['WIN DAYS',String(winDays.length),'positive'],['LOSS DAYS',String(lossDays.length),'negative'],['BEST DAY',best?calendarMoney(best.pnl):'—',best&&best.pnl>=0?'positive':'negative'],['WORST DAY',worst?calendarMoney(worst.pnl):'—',worst&&worst.pnl<0?'negative':'positive']];
+ $('#calendarSummary').innerHTML=items.map(([label,value,cls])=>`<div class="calendar-stat"><small>${label}</small><strong class="${cls}">${value}</strong></div>`).join('');
+ renderCalendarDetails();
+}
+function renderCalendarDetails(){
+ const box=$('#calendarDetails');if(!box)return;
+ if(!selectedCalendarDate){box.innerHTML='<div class="muted">Select a date to inspect the trades recorded for that day.</div>';return}
+ const dayTrades=trades.filter(t=>t.date===selectedCalendarDate);
+ const total=sum(dayTrades);
+ box.innerHTML=`<h3>${new Date(`${selectedCalendarDate}T12:00:00`).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})} · <span class="${total>=0?'positive':'negative'}">${calendarMoney(total)}</span></h3>`+(dayTrades.length?dayTrades.map(tradeCard).join(''):noData('No trades were recorded on this date.'));
+}
+$('#calendarPrev').addEventListener('click',()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1);selectedCalendarDate='';renderCalendar()});
+$('#calendarNext').addEventListener('click',()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1);selectedCalendarDate='';renderCalendar()});
+$('#calendarGrid').addEventListener('click',e=>{const day=e.target.closest('[data-calendar-date]');if(!day)return;selectedCalendarDate=day.dataset.calendarDate;renderCalendar()});
+
 function applyFilters(){if(!$('#tradesList'))return;let f=$('#filter').value,q=$('#search').value.toLowerCase();let arr=trades.filter(t=>(f==='all'||(f==='wins'&&t.pnl>0)||(f==='losses'&&t.pnl<0)||(f==='violations'&&!t.rules))&&JSON.stringify(t).toLowerCase().includes(q));$('#tradesList').innerHTML=arr.length?arr.map(tradeCard).join(''):noData('No trades match these filters.')}
 function go(page){$$('.page').forEach(p=>p.classList.toggle('hidden',p.id!==page));$$('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));window.scrollTo({top:0,behavior:'smooth'})}
 $('#nav').addEventListener('click',e=>{let b=e.target.closest('[data-page]');if(b)go(b.dataset.page)});
@@ -537,7 +867,8 @@ function loadCloudConfig(){
   $('#fbAppId').value = c.appId;
  }
  
-function configureCloud(){const c=getCloudConfig();if(!c.apiKey||!c.authDomain||!c.projectId||!c.appId){cloudMessage('Enter all four Firebase web config values first.',true);return false}try{localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(c));if(!window.firebase){cloudMessage('Firebase libraries could not load. Connect to the internet and reload this page.',true);return false}if(!firebase.apps.length)firebase.initializeApp(c);else {const app=firebase.app();if(app.options.projectId!==c.projectId){cloudMessage('This page already initialized a different Firebase project. Reload the page to switch projects.',true);return false}}cloudAuth=firebase.auth();cloudDb=firebase.firestore();cloudAuth.onAuthStateChanged(async user=>{cloudUser=user||null;$('#googleLoginBtn').disabled=!!user;$('#googleLogoutBtn').disabled=!user;$('#syncCloudBtn').disabled=!user;cloudMessage(user?`Signed in as ${user.email||'Google account'}. Syncing your journal…`:'Firebase configured. Sign in with Google to sync.',false);if(user){try{await syncCloud(true)}catch(e){cloudMessage('Signed in, but sync failed: '+e.message,true)}}});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
+function configureCloud(){const c=getCloudConfig();if(!c.apiKey||!c.authDomain||!c.projectId||!c.appId){cloudMessage('Enter all four Firebase web config values first.',true);return false}try{localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(c));if(!window.firebase){cloudMessage('Firebase libraries could not load. Connect to the internet and reload this page.',true);return false}if(!firebase.apps.length)firebase.initializeApp(c);else {const app=firebase.app();if(app.options.projectId!==c.projectId){cloudMessage('This page already initialized a different Firebase project. Reload the page to switch projects.',true);return false}}cloudAuth=firebase.auth();cloudDb=firebase.firestore();cloudAuth.onAuthStateChanged(async user=>{cloudUser=user||null;
+updateGreeting();$('#googleLoginBtn').disabled=!!user;$('#googleLogoutBtn').disabled=!user;$('#syncCloudBtn').disabled=!user;cloudMessage(user?`Signed in as ${user.email||'Google account'}. Syncing your journal…`:'Firebase configured. Sign in with Google to sync.',false);if(user){try{await syncCloud(true)}catch(e){cloudMessage('Signed in, but sync failed: '+e.message,true)}}});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
 function mergeTrades(local,remote){const map=new Map();for(const t of [...remote,...local]){const id=String(t.id??JSON.stringify(t));map.set(id,t)}return [...map.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(Number(b.id)||0)-(Number(a.id)||0))}
 function getDeletedIds(){try{return JSON.parse(localStorage.getItem(DELETED_KEY)||'[]').map(String)}catch(e){return []}}
 function markDeleted(id){const ids=new Set(getDeletedIds());ids.add(String(id));localStorage.setItem(DELETED_KEY,JSON.stringify([...ids]))}
@@ -548,7 +879,30 @@ $('#googleLogoutBtn').addEventListener('click',async()=>{if(cloudAuth)await clou
 $('#syncCloudBtn').addEventListener('click',()=>syncCloud(true));
 $('#starting').addEventListener('change',()=>{if(cloudUser&&cloudDb)cloudDb.collection('users').doc(cloudUser.uid).collection('settings').doc('account').set({starting:$('#starting').value,riskPct:$('#riskPct').value,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(e=>cloudMessage('Settings sync failed: '+e.message,true))});
 $('#riskPct').addEventListener('change',()=>{if(cloudUser&&cloudDb)cloudDb.collection('users').doc(cloudUser.uid).collection('settings').doc('account').set({starting:$('#starting').value,riskPct:$('#riskPct').value,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(e=>cloudMessage('Settings sync failed: '+e.message,true))});
-loadCloudConfig();load();$('#tradeForm').elements.date.value=new Date().toISOString().slice(0,10);render();
+function updateGreeting() {
+  const hour = new Date().getHours();
+
+  const greeting =
+    hour < 12 ? 'Good morning' :
+    hour < 17 ? 'Good afternoon' :
+    'Good evening';
+
+  const firstName = cloudUser?.displayName
+    ? cloudUser.displayName.trim().split(/\s+/)[0]
+    : '';
+
+  const heading = document.getElementById('welcomeGreeting');
+
+  if (heading) {
+    heading.textContent = firstName
+      ? `${greeting}, ${firstName}`
+      : greeting;
+  }
+}
+
+updateGreeting();
+setInterval(updateGreeting, 60000);
+ loadCloudConfig();load();$('#tradeForm').elements.date.value=new Date().toISOString().slice(0,10);render();
 </script>
 </body>
 </html>
