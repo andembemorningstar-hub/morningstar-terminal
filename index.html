@@ -600,9 +600,14 @@ input, select, textarea, .check {
 <div hidden><input id="fbApiKey"><input id="fbAuthDomain"><input id="fbProjectId"><input id="fbAppId"></div>
    
   </div>
-  <div class="actions"><button id="configureCloudBtn">Save cloud config</button><button class="primary" id="googleLoginBtn">Sign in with Google</button><button id="syncCloudBtn">Sync now</button><button id="googleLogoutBtn">Sign out</button></div>
-  <div class="notice" id="cloudMessage">Setup required: create a Firebase project, enable Google sign-in and Firestore, then paste the web app config above. Cloud sync requires internet and an HTTPS-hosted page; opening the file offline still uses local storage.</div>
-  <details class="section"><summary>Firebase setup & security rules</summary>
+  <div class="actions">
+  <button id="configureCloudBtn" hidden>Save cloud config</button>
+  <button class="primary" id="googleLoginBtn">Sign in with Google</button>
+  <button id="syncCloudBtn">Sync now</button>
+  <button id="googleLogoutBtn">Sign out</button>
+</div>
+  <div class="notice" id="cloudMessage">Your journal is ready. Sign in securely to access your trading records.</div>
+  <details class="section" hidden>
    <ol><li>Open <a href="https://console.firebase.google.com/" target="_blank" rel="noopener">Firebase Console</a> and create a project.</li><li>Add a Web app and copy its <strong>apiKey</strong>, <strong>authDomain</strong>, <strong>projectId</strong>, and <strong>appId</strong> into the fields above.</li><li>In Authentication → Sign-in method, enable <strong>Google</strong>.</li><li>In Firestore Database, create a database.</li><li>Publish these Firestore rules so each user can access only their own journal:</li></ol>
    <pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:#0b1423;padding:12px;border-radius:9px;color:#d9e6f7">rules_version = '2';
 service cloud.firestore {
