@@ -807,13 +807,110 @@ let cloudAuth=null, cloudDb=null, cloudUser=null, cloudBusy=false;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const money=n=>(n<0?'−':'')+'$'+Math.abs(n||0).toFixed(2);
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function load(){try{trades=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(trades))trades=[]}catch(e){trades=[]}}
-function save(){localStorage.setItem(KEY,JSON.stringify(trades));render();if(cloudUser&&cloudDb)syncCloud(false)}
+
+function accountTradesKey(id){
+  return `morningstar_trades_${id}`;
+}
+
+function accountSettingsKey(id){
+  return `morningstar_settings_${id}`;
+}
+
+function getAccount(id){
+  return accounts.find(a=>a.id===id);
+}
+
+function load(){
+  try{
+    accounts=JSON.parse(localStorage.getItem(ACCOUNTS_KEY)||'[]');
+    if(!Array.isArray(accounts))accounts=[];
+  }catch(e){
+    accounts=[];
+  }
+
+  if(!accounts.some(a=>a.id==='main')){
+    accounts.unshift({
+      id:'main',
+      name:'Main Account',
+      type:'main',
+      starting:2000,
+      riskPct:0.5
+    });
+  }
+
+  if(!accounts.some(a=>a.id==='news')){
+    accounts.push({
+      id:'news',
+      name:'News Trading Account',
+      type:'news',
+      starting:2000,
+      riskPct:0.5
+    });
+  }
+
+  localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
+
+  // Preserve existing trades by migrating them into Main Account.
+  const mainKey=accountTradesKey('main');
+
+  if(localStorage.getItem(mainKey)===null){
+    let oldTrades=[];
+
+    try{
+      oldTrades=JSON.parse(localStorage.getItem(KEY)||'[]');
+      if(!Array.isArray(oldTrades))oldTrades=[];
+    }catch(e){
+      oldTrades=[];
+    }
+
+    localStorage.setItem(mainKey,JSON.stringify(oldTrades));
+  }
+
+  activeAccountId=localStorage.getItem(ACTIVE_ACCOUNT_KEY)||'main';
+
+  if(!getAccount(activeAccountId)){
+    activeAccountId='main';
+  }
+
+  allAccountsView=false;
+
+  try{
+    trades=JSON.parse(localStorage.getItem(accountTradesKey(activeAccountId))||'[]');
+    if(!Array.isArray(trades))trades=[];
+  }catch(e){
+    trades=[];
+  }
+
+  const account=getAccount(activeAccountId);
+  const settingsKey=accountSettingsKey(activeAccountId);
+
+  try{
+    const settings=JSON.parse(localStorage.getItem(settingsKey)||'{}');
+
+    $('#starting').value=settings.starting??account.starting??2000;
+    $('#riskPct').value=settings.riskPct??account.riskPct??0.5;
+  }catch(e){
+    $('#starting').value=account.starting??2000;
+    $('#riskPct').value=account.riskPct??0.5;
+  }
+}
+
+function save(){
+  if(allAccountsView)return;
+
+  localStorage.setItem(
+    accountTradesKey(activeAccountId),
+    JSON.stringify(trades)
+  );
+
+  render();
+}
+
 function sum(arr,fn=t=>t.pnl){return arr.reduce((s,t)=>s+(Number(fn(t))||0),0)}
 function stats(arr=trades){let w=arr.filter(t=>t.pnl>0),l=arr.filter(t=>t.pnl<0),gp=sum(w),gl=-sum(l);return {n:arr.length,w:w.length,l:l.length,net:sum(arr),gp,gl,wr:arr.length?w.length/arr.length*100:0,pf:gl?gp/gl:gp?Infinity:0,avgR:arr.length?sum(arr,t=>t.r)/arr.length:0,comp:arr.length?arr.filter(t=>t.rules).length/arr.length*100:0}}
 function metric(label,val,sub=''){return `<div class="card"><div class="muted">${label}</div><div class="metric">${val}</div><div class="muted">${sub}</div></div>`}
 function noData(msg='No trades logged yet. Add your first trade to start building a record.') {return `<div class="empty">${msg}</div>`}
-function tradeCard(t){const shot=(label,src)=>src?`<div style="min-width:0"><div class="muted">${label}</div><a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="${label}" loading="lazy" style="display:block;max-width:100%;max-height:260px;object-fit:contain;border:1px solid var(--line);border-radius:9px;margin-top:6px"></a></div>`:'';return `<div class="card trade"><div class="trade-top"><div><strong>${safe(t.instrument)} · ${safe(t.direction)}</strong><div class="muted">${safe(t.date)} · ${safe(t.session)}</div></div><div style="text-align:right"><strong class="${t.pnl>=0?'positive':'negative'}">${money(t.pnl)}</strong><div class="muted">${Number(t.r||0).toFixed(2)}R</div></div></div><div><span class="pill">${safe(t.setup)}</span><span class="pill">${t.rules?'Rules followed':'Rule violation'}</span><span class="pill">${safe(t.emotion)}</span></div><div class="muted">Bias ${t.bias?'✓':'✗'} · Sweep ${t.sweep?'✓':'✗'} · BOS ${t.bos?'✓':'✗'} · OB/FVG ${t.fvg?'✓':'✗'} · Mistake: ${safe(t.mistake)}</div>${t.notes?`<p>${safe(t.notes)}</p>`:''}${t.beforeImage||t.afterImage?`<div class="grid two section">${shot('Before trade',t.beforeImage)}${shot('After trade',t.afterImage)}</div>`:''}<div class="actions"><button data-delete="${t.id}">Delete entry</button></div></div>`}
+function tradeCard(t){const shot=(label,src)=>src?`<div style="min-width:0"><div class="muted">${label}</div><a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="${label}" loading="lazy" style="display:block;max-width:100%;max-height:260px;object-fit:contain;border:1px solid var(--line);border-radius:9px;margin-top:6px"></a></div>`:'';return `<div class="card trade">${allAccountsView&&t._accountName?`<div class="muted">Account: ${safe(t._accountName)}</div>`:''}<div class="trade-top"><div><strong>${safe(t.instrument)} · ${safe(t.direction)}</strong><div class="muted">${safe(t.date)} · ${safe(t.session)}</div></div><div style="text-align:right"><strong class="${t.pnl>=0?'positive':'negative'}">${money(t.pnl)}</strong><div class="muted">${Number(t.r||0).toFixed(2)}R</div></div></div><div><span class="pill">${safe(t.setup)}</span><span class="pill">${t.rules?'Rules followed':'Rule violation'}</span><span class="pill">${safe(t.emotion)}</span></div><div class="muted">Bias ${t.bias?'✓':'✗'} · Sweep ${t.sweep?'✓':'✗'} · BOS ${t.bos?'✓':'✗'} · OB/FVG ${t.fvg?'✓':'✗'} · Mistake: ${safe(t.mistake)}</div>${t.notes?`<p>${safe(t.notes)}</p>`:''}${t.beforeImage||t.afterImage?`<div class="grid two section">${shot('Before trade',t.beforeImage)}${shot('After trade',t.afterImage)}</div>`:''}${allAccountsView?'':`<div class="actions"><button data-delete="${t.id}">Delete entry</button></div>`}</div>`}
 function barRow(label,val,max,display){return `<div class="section"><div style="display:flex;justify-content:space-between;gap:10px"><span>${safe(label)}</span><strong>${safe(display)}</strong></div><div class="bar"><span style="width:${max?Math.min(100,Math.abs(val)/max*100):0}%"></span></div></div>`}
 function chartLabel(s,max=12){s=String(s);return s.length>max?s.slice(0,max-1)+'…':s}
 function lineChart(series,labels,colors,aria){
@@ -905,12 +1002,25 @@ $('#calendarGrid').addEventListener('click',e=>{const day=e.target.closest('[dat
 function applyFilters(){if(!$('#tradesList'))return;let f=$('#filter').value,q=$('#search').value.toLowerCase();let arr=trades.filter(t=>(f==='all'||(f==='wins'&&t.pnl>0)||(f==='losses'&&t.pnl<0)||(f==='violations'&&!t.rules))&&JSON.stringify(t).toLowerCase().includes(q));$('#tradesList').innerHTML=arr.length?arr.map(tradeCard).join(''):noData('No trades match these filters.')}
 function go(page){$$('.page').forEach(p=>p.classList.toggle('hidden',p.id!==page));$$('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));window.scrollTo({top:0,behavior:'smooth'})}
 $('#nav').addEventListener('click',e=>{let b=e.target.closest('[data-page]');if(b)go(b.dataset.page)});
-document.addEventListener('click',e=>{let g=e.target.closest('[data-goto]');if(g)go(g.dataset.goto);let d=e.target.closest('[data-delete]');if(d&&confirm('Delete this trade permanently from your journal?')){markDeleted(d.dataset.delete);trades=trades.filter(t=>String(t.id)!==d.dataset.delete);save()}});
+document.addEventListener('click',e=>{let g=e.target.closest('[data-goto]');if(g)go(g.dataset.goto);let d=e.target.closest('[data-delete]');
+if(d&&allAccountsView){
+  alert('Select a specific account before deleting a trade.');
+  return;
+}
+if(d&&confirm('Delete this trade permanently from your journal?')){markDeleted(d.dataset.delete);trades=trades.filter(t=>String(t.id)!==d.dataset.delete);save()}});
 $('#filter').addEventListener('change',applyFilters);$('#search').addEventListener('input',applyFilters);$('#starting').addEventListener('input',render);$('#riskPct').addEventListener('input',render);
 function compressImage(file){return new Promise((resolve,reject)=>{if(!file)return resolve('');if(!file.type.startsWith('image/'))return reject(new Error('Please choose an image file.'));const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read image.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('Could not process image.'));img.onload=()=>{const max=1000,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',0.62))};img.src=reader.result};reader.readAsDataURL(file)})}
 function previewImage(inputId,previewId){const input=$('#'+inputId),preview=$('#'+previewId);input.addEventListener('change',()=>{const file=input.files[0];if(!file){preview.textContent='No image selected.';return}const url=URL.createObjectURL(file);preview.innerHTML=`<img src="${url}" alt="Selected screenshot preview" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:8px;margin-top:5px">`})}
 previewImage('beforeImage','beforePreview');previewImage('afterImage','afterPreview');
-$('#tradeForm').addEventListener('submit',async e=>{e.preventDefault();let form=e.target,f=new FormData(form),risk=Number(f.get('risk')),pnl=Number(f.get('pnl'));if(!(risk>0)||!Number.isFinite(pnl)){alert('Enter a valid risk amount and realized P&L.');return}const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent='Saving…';try{const beforeImage=await compressImage(form.elements.beforeImage.files[0]),afterImage=await compressImage(form.elements.afterImage.files[0]);let t={id:Date.now(),date:f.get('date'),instrument:f.get('instrument'),direction:f.get('direction'),session:f.get('session'),setup:f.get('setup'),outcome:f.get('outcome'),entry:f.get('entry'),sl:f.get('sl'),tp:f.get('tp'),risk,pnl,r:pnl/risk,emotion:f.get('emotion'),bias:f.has('bias'),sweep:f.has('sweep'),bos:f.has('bos'),fvg:f.has('fvg'),rules:f.has('rules')&&f.has('bias')&&f.has('sweep')&&f.has('bos')&&f.has('fvg'),mistake:f.get('mistake'),notes:f.get('notes'),beforeImage:beforeImage||null,afterImage:afterImage||null};trades.unshift(t);save();form.reset();$('#beforePreview').textContent='No before-trade image selected.';$('#afterPreview').textContent='No after-trade image selected.';form.elements.date.value=new Date().toISOString().slice(0,10);form.elements.risk.value=10;go('journal')}catch(err){alert(err.message||'Could not save the trade screenshots. Try smaller images.')}finally{submit.disabled=false;submit.textContent='Save trade'}});
+$('#tradeForm').addEventListener('submit',async e=>{
+e.preventDefault();
+
+if(allAccountsView){
+  alert('Select a specific account before recording a trade.');
+  return;
+}
+
+let form=e.target,f=new FormData(form),risk=Number(f.get('risk')),pnl=Number(f.get('pnl'));if(!(risk>0)||!Number.isFinite(pnl)){alert('Enter a valid risk amount and realized P&L.');return}const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent='Saving…';try{const beforeImage=await compressImage(form.elements.beforeImage.files[0]),afterImage=await compressImage(form.elements.afterImage.files[0]);let t={id:Date.now(),date:f.get('date'),instrument:f.get('instrument'),direction:f.get('direction'),session:f.get('session'),setup:f.get('setup'),outcome:f.get('outcome'),entry:f.get('entry'),sl:f.get('sl'),tp:f.get('tp'),risk,pnl,r:pnl/risk,emotion:f.get('emotion'),bias:f.has('bias'),sweep:f.has('sweep'),bos:f.has('bos'),fvg:f.has('fvg'),rules:f.has('rules')&&f.has('bias')&&f.has('sweep')&&f.has('bos')&&f.has('fvg'),mistake:f.get('mistake'),notes:f.get('notes'),beforeImage:beforeImage||null,afterImage:afterImage||null};trades.unshift(t);save();form.reset();$('#beforePreview').textContent='No before-trade image selected.';$('#afterPreview').textContent='No after-trade image selected.';form.elements.date.value=new Date().toISOString().slice(0,10);form.elements.risk.value=10;go('journal')}catch(err){alert(err.message||'Could not save the trade screenshots. Try smaller images.')}finally{submit.disabled=false;submit.textContent='Save trade'}});
 $('#resetForm').addEventListener('click',()=>setTimeout(()=>$('#tradeForm').elements.date.value=new Date().toISOString().slice(0,10),0));
 function download(name,content,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $('#backupBtn').addEventListener('click',()=>download('morningstar-trading-backup.json',JSON.stringify({version:2,exportedAt:new Date().toISOString(),trades},null,2),'application/json'));
@@ -938,7 +1048,12 @@ function loadCloudConfig(){
  }
  
 function configureCloud(){const c=getCloudConfig();if(!c.apiKey||!c.authDomain||!c.projectId||!c.appId){cloudMessage('Enter all four Firebase web config values first.',true);return false}try{localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(c));if(!window.firebase){cloudMessage('Firebase libraries could not load. Connect to the internet and reload this page.',true);return false}if(!firebase.apps.length)firebase.initializeApp(c);else {const app=firebase.app();if(app.options.projectId!==c.projectId){cloudMessage('This page already initialized a different Firebase project. Reload the page to switch projects.',true);return false}}cloudAuth=firebase.auth();cloudDb=firebase.firestore();cloudAuth.onAuthStateChanged(async user=>{cloudUser=user||null;
-updateGreeting();$('#googleLoginBtn').disabled=!!user;$('#googleLogoutBtn').disabled=!user;$('#syncCloudBtn').disabled=!user;cloudMessage(user?`Signed in as ${user.email||'Google account'}. Syncing your journal…`:'Firebase configured. Sign in with Google to sync.',false);if(user){try{await syncCloud(true)}catch(e){cloudMessage('Signed in, but sync failed: '+e.message,true)}}});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
+updateGreeting();$('#googleLoginBtn').disabled=!!user;$('#googleLogoutBtn').disabled=!user;$('#syncCloudBtn').disabled=!user;cloudMessage(user?`Signed in as ${user.email||'Google account'}. Syncing your journal…`:'Firebase configured. Sign in with Google to sync.',false);if(user){
+  cloudMessage(
+    'Signed in. Account-separated cloud sync is being prepared. Existing cloud records are preserved.',
+    false
+  );
+}});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
 function mergeTrades(local,remote){const map=new Map();for(const t of [...remote,...local]){const id=String(t.id??JSON.stringify(t));map.set(id,t)}return [...map.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(Number(b.id)||0)-(Number(a.id)||0))}
 function getDeletedIds(){try{return JSON.parse(localStorage.getItem(DELETED_KEY)||'[]').map(String)}catch(e){return []}}
 function markDeleted(id){const ids=new Set(getDeletedIds());ids.add(String(id));localStorage.setItem(DELETED_KEY,JSON.stringify([...ids]))}
@@ -946,9 +1061,230 @@ async function syncCloud(showNotice=true){if(!cloudUser||!cloudDb||cloudBusy)ret
 $('#configureCloudBtn').addEventListener('click',configureCloud);
 $('#googleLoginBtn').addEventListener('click',async()=>{if(!cloudDb&&!configureCloud())return;try{await cloudAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){cloudMessage('Google sign-in failed: '+e.message,true)}});
 $('#googleLogoutBtn').addEventListener('click',async()=>{if(cloudAuth)await cloudAuth.signOut()});
-$('#syncCloudBtn').addEventListener('click',()=>syncCloud(true));
-$('#starting').addEventListener('change',()=>{if(cloudUser&&cloudDb)cloudDb.collection('users').doc(cloudUser.uid).collection('settings').doc('account').set({starting:$('#starting').value,riskPct:$('#riskPct').value,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(e=>cloudMessage('Settings sync failed: '+e.message,true))});
-$('#riskPct').addEventListener('change',()=>{if(cloudUser&&cloudDb)cloudDb.collection('users').doc(cloudUser.uid).collection('settings').doc('account').set({starting:$('#starting').value,riskPct:$('#riskPct').value,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(e=>cloudMessage('Settings sync failed: '+e.message,true))});
+$('#syncCloudBtn').addEventListener('click',()=>{
+  cloudMessage(
+    'Account-separated cloud sync is not ready yet. Your local trades remain saved.',
+    false
+  );
+});
+
+function saveAccountSettings(){
+  if(allAccountsView)return;
+
+  const account=getAccount(activeAccountId);
+  if(!account)return;
+
+  account.starting=Number($('#starting').value)||0;
+  account.riskPct=Number($('#riskPct').value)||0;
+
+  localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
+
+  localStorage.setItem(
+    accountSettingsKey(activeAccountId),
+    JSON.stringify({
+      starting:account.starting,
+      riskPct:account.riskPct
+    })
+  );
+
+  const plannedRisk=account.starting*account.riskPct/100;
+  $('#riskDollars').textContent=money(plannedRisk);
+}
+
+$('#starting').addEventListener('change',saveAccountSettings);
+$('#riskPct').addEventListener('change',saveAccountSettings);
+
+function renderAccountMenu(){
+  const list=document.getElementById('accountList');
+  const activeName=document.getElementById('activeAccountName');
+
+  list.innerHTML='';
+  activeName.textContent=allAccountsView
+    ? 'All Accounts'
+    : getAccount(activeAccountId)?.name||'Main Account';
+
+  function addButton(label,action){
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.textContent=label;
+    btn.addEventListener('click',action);
+    list.appendChild(btn);
+  }
+
+  addButton('MAIN ACCOUNT',()=>switchAccount('main'));
+  addButton('NEWS TRADING ACCOUNT',()=>switchAccount('news'));
+
+  const funded=accounts.filter(a=>a.type==='funded');
+
+  if(funded.length){
+    const heading=document.createElement('div');
+    heading.textContent='FUNDED ACCOUNTS';
+    heading.style.cssText='padding:12px 8px 5px;font-size:11px;font-weight:800;color:var(--muted)';
+    list.appendChild(heading);
+
+    funded.forEach(account=>{
+      addButton(account.name,()=>switchAccount(account.id));
+
+      addButton('Rename '+account.name,()=>renameAccount(account.id));
+
+      addButton('Delete '+account.name,()=>deleteAccount(account.id));
+    });
+  }
+}
+
+function switchAccount(id){
+  if(!getAccount(id))return;
+
+  if(!allAccountsView)saveAccountSettings();
+
+  activeAccountId=id;
+  allAccountsView=false;
+
+  localStorage.setItem(ACTIVE_ACCOUNT_KEY,id);
+
+  try{
+    trades=JSON.parse(
+      localStorage.getItem(accountTradesKey(id))||'[]'
+    );
+    if(!Array.isArray(trades))trades=[];
+  }catch(e){
+    trades=[];
+  }
+
+  const account=getAccount(id);
+  let settings={};
+
+  try{
+    settings=JSON.parse(
+      localStorage.getItem(accountSettingsKey(id))||'{}'
+    );
+  }catch(e){}
+
+  $('#starting').value=settings.starting??account.starting??2000;
+  $('#riskPct').value=settings.riskPct??account.riskPct??0.5;
+
+  $('#starting').disabled=false;
+  $('#riskPct').disabled=false;
+
+  renderAccountMenu();
+  $('#accountDropdown').classList.add('hidden');
+  render();
+}
+
+function addFundedAccount(){
+  const name=prompt('Enter the funded account name:');
+  if(!name||!name.trim())return;
+
+  const balance=Number(prompt('Enter the starting balance in USD:','1000'));
+  if(!Number.isFinite(balance)||balance<=0){
+    alert('Enter a valid starting balance.');
+    return;
+  }
+
+  const risk=Number(prompt('Enter planned risk per trade (%):','0.5'));
+  if(!Number.isFinite(risk)||risk<0){
+    alert('Enter a valid risk percentage.');
+    return;
+  }
+
+  const id='funded-'+Date.now();
+
+  accounts.push({
+    id,
+    name:name.trim(),
+    type:'funded',
+    starting:balance,
+    riskPct:risk
+  });
+
+  localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
+  localStorage.setItem(accountTradesKey(id),'[]');
+  localStorage.setItem(
+    accountSettingsKey(id),
+    JSON.stringify({starting:balance,riskPct:risk})
+  );
+
+  switchAccount(id);
+}
+
+function renameAccount(id){
+  const account=getAccount(id);
+  if(!account)return;
+
+  const name=prompt('Enter the new account name:',account.name);
+  if(!name||!name.trim())return;
+
+  account.name=name.trim();
+  localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
+
+  renderAccountMenu();
+}
+
+function deleteAccount(id){
+  const account=getAccount(id);
+  if(!account||account.type!=='funded')return;
+
+  if(!confirm(
+    `Permanently delete "${account.name}" and its local trades?`
+  ))return;
+
+  accounts=accounts.filter(a=>a.id!==id);
+
+  localStorage.removeItem(accountTradesKey(id));
+  localStorage.removeItem(accountSettingsKey(id));
+  localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
+
+  if(activeAccountId===id)switchAccount('main');
+  else renderAccountMenu();
+}
+
+function showAllAccounts(){
+  saveAccountSettings();
+
+  allAccountsView=true;
+  trades=[];
+
+  accounts.forEach(account=>{
+    let accountTrades=[];
+
+    try{
+      accountTrades=JSON.parse(
+        localStorage.getItem(accountTradesKey(account.id))||'[]'
+      );
+    }catch(e){}
+
+    if(Array.isArray(accountTrades)){
+      trades.push(...accountTrades.map(t=>({
+        ...t,
+        _accountName:account.name
+      })));
+    }
+  });
+
+  trades.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  $('#starting').disabled=true;
+  $('#riskPct').disabled=true;
+
+  renderAccountMenu();
+  $('#accountDropdown').classList.add('hidden');
+  render();
+}
+
+document.getElementById('accountSwitchBtn').addEventListener(
+  'click',()=>{
+    $('#accountDropdown').classList.toggle('hidden');
+  }
+);
+
+document.getElementById('addAccountBtn').addEventListener(
+  'click',addFundedAccount
+);
+
+document.getElementById('allAccountsBtn').addEventListener(
+  'click',showAllAccounts
+);
+
 function updateGreeting() {
   const hour = new Date().getHours();
 
@@ -972,7 +1308,11 @@ function updateGreeting() {
 
 updateGreeting();
 setInterval(updateGreeting, 60000);
- loadCloudConfig();load();$('#tradeForm').elements.date.value=new Date().toISOString().slice(0,10);render();
+ loadCloudConfig();
+load();
+renderAccountMenu();
+$('#tradeForm').elements.date.value=new Date().toISOString().slice(0,10);
+render();
 </script>
 </body>
 </html>
