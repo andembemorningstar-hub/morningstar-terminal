@@ -1745,10 +1745,20 @@ $('#continueButton').addEventListener('click',()=>{
   $('#welcomeLogin').classList.remove('hidden');
 });
 
-// Reuse the existing Firebase Google login
-$('#welcomeLoginBtn').addEventListener('click',(e)=>{
+// Welcome screen Google login
+$('#welcomeLoginBtn').addEventListener('click',async(e)=>{
   e.stopPropagation();
-  $('#googleLoginBtn').click();
+
+  if(!cloudDb && !configureCloud()) return;
+
+  try{
+    await cloudAuth.signInWithPopup(
+      new firebase.auth.GoogleAuthProvider()
+    );
+  }catch(e){
+    cloudMessage('Google sign-in failed: '+e.message,true);
+    alert('Google sign-in failed: '+e.message);
+  }
 });
 $('#configureCloudBtn').addEventListener('click',configureCloud);
 $('#googleLoginBtn').addEventListener('click',async()=>{if(!cloudDb&&!configureCloud())return;try{await cloudAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){cloudMessage('Google sign-in failed: '+e.message,true)}});
