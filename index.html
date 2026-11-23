@@ -696,25 +696,10 @@ input, select, textarea, .check {
   <span style="--start-x:48%;--start-y:-20%;--delay:4.76s;--length:135px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
   <span style="--start-x:80%;--start-y:80%;--delay:4.93s;--length:190px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
 </div>
-  <div id="welcomePrompt" class="welcome-content">
-    <h1>MORNINGSTAR</h1>
-    <p>TRADING JOURNAL</p>
-    <button type="button" id="continueButton">
-  CLICK HERE TO CONTINUE
-</button>
-  </div>
-
-  <div id="welcomeLogin" class="welcome-content hidden">
-    <h1>WELCOME BACK</h1>
-    <p>Sign in to access your journal</p>
-    <button type="button" id="welcomeLoginBtn">
-      Sign in with Google
-    </button>
-  </div>
-
-  <div id="welcomeBack" class="welcome-content hidden">
-    <h1 id="welcomeBackName">Welcome back</h1>
-  </div>
+ <div id="welcomeMessage" class="welcome-content">
+  <h1>WELCOME TO MORNINGSTAR</h1>
+  <p>YOUR TRADING JOURNEY STARTS HERE</p>
+</div>
 
 </div>
 
@@ -1327,21 +1312,7 @@ cloudAuth.onAuthStateChanged(async user=>{
   $('#syncCloudBtn').disabled=!user;
 
   if(user){
-    const firstName=user.displayName
-      ? user.displayName.trim().split(/\s+/)[0]
-      : 'Trader';
-
-    $('#welcomeBackName').textContent='Welcome back, '+firstName;
-
-    $('#welcomePrompt').classList.add('hidden');
-    $('#welcomeLogin').classList.add('hidden');
-    $('#welcomeBack').classList.remove('hidden');
-
     cloudMessage(`Signed in as ${user.email||'Google account'}. Syncing your journal…`);
-
-    setTimeout(()=>{
-      $('#welcomeScreen').classList.add('hidden');
-    },2500);
 
     try{
       await syncCloud(false);
@@ -1349,11 +1320,6 @@ cloudAuth.onAuthStateChanged(async user=>{
       cloudMessage('Signed in, but sync failed: '+e.message,true);
     }
   }else{
-    $('#welcomeScreen').classList.remove('hidden');
-    $('#welcomeBack').classList.add('hidden');
-    $('#welcomeLogin').classList.add('hidden');
-    $('#welcomePrompt').classList.remove('hidden');
-
     cloudMessage('Firebase configured. Sign in with Google to sync.');
   }
 });cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
@@ -1739,28 +1705,10 @@ localStorage.removeItem(DELETED_KEY);
   }
 }
 // Opening screen: respond to mouse and mobile touch
-// Continue button opens Google sign-in screen
-$('#continueButton').addEventListener('click',()=>{
-  $('#welcomePrompt').classList.add('hidden');
-  $('#welcomeLogin').classList.remove('hidden');
-});
-
-// Welcome screen Google login
-$('#welcomeLoginBtn').addEventListener('click',async(e)=>{
- alert('Google button clicked');
-  e.stopPropagation();
-
-  if(!cloudDb && !configureCloud()) return;
-
-  try{
-    await cloudAuth.signInWithPopup(
-      new firebase.auth.GoogleAuthProvider()
-    );
-  }catch(e){
-    cloudMessage('Google sign-in failed: '+e.message,true);
-    alert('Google sign-in failed: '+e.message);
-  }
-});
+// Automatically open journal after 3 seconds
+setTimeout(()=>{
+  $('#welcomeScreen').classList.add('hidden');
+},3000);
 $('#configureCloudBtn').addEventListener('click',configureCloud);
 $('#googleLoginBtn').addEventListener('click',async()=>{if(!cloudDb&&!configureCloud())return;try{await cloudAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){cloudMessage('Google sign-in failed: '+e.message,true)}});
 $('#googleLogoutBtn').addEventListener('click',async()=>{if(cloudAuth)await cloudAuth.signOut()});
