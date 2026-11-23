@@ -1436,9 +1436,25 @@ remoteAccounts.forEach(doc=>{
 
     // Synchronize every account independently.
 for(const account of accounts){
-  const deleted=new Set(getDeletedIds(account.id));
-      const accountRef=accountsCol.doc(account.id);
-      const tradeCol=accountRef.collection('trades');
+  const accountRef=accountsCol.doc(account.id);
+const tradeCol=accountRef.collection('trades');
+const deletionCol=accountRef.collection('deletedTrades');
+
+const deleted=new Set(getDeletedIds(account.id));
+
+// Publish local deletions to Firebase.
+for(const id of deleted){
+  await deletionCol.doc(String(id)).set({
+    deletedAt:Date.now()
+  },{merge:true});
+}
+
+// Load deletion records from every device.
+const cloudDeletedSnap=await deletionCol.get();
+
+cloudDeletedSnap.docs.forEach(doc=>{
+  deleted.add(doc.id);
+});
       const settingsRef=accountRef.collection('settings').doc('account');
 
       const localKey=accountTradesKey(account.id);
