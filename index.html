@@ -1736,8 +1736,8 @@ localStorage.removeItem(DELETED_KEY);
     cloudBusy=false;
   }
 }
-// Opening screen: reveal Google sign-in
-$('#welcomeScreen').addEventListener('click',()=>{
+// Opening screen: respond to mouse and mobile touch
+$('#welcomeScreen').addEventListener('pointerdown',()=>{
   if(!$('#welcomePrompt').classList.contains('hidden')){
     $('#welcomePrompt').classList.add('hidden');
     $('#welcomeLogin').classList.remove('hidden');
