@@ -81,7 +81,7 @@ body > * {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 0;
+  z-index: 100000;
 }
 
 
@@ -588,12 +588,82 @@ input, select, textarea, .check {
     font-size: 19px;
   }
 }
+/* MORNINGSTAR OPENING SCREEN */
+.welcome-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.welcome-content {
+  position: relative;
+  z-index: 100001;
+  padding: 25px;
+  animation: welcomeFadeIn 1.2s ease both;
+}
+
+.welcome-content h1 {
+  color: #fff;
+  font-size: clamp(32px, 7vw, 68px);
+  letter-spacing: 8px;
+  text-shadow: 0 0 10px #fff, 0 0 25px #9ccaff;
+}
+
+.welcome-content p {
+  color: #b9cfff;
+  letter-spacing: 5px;
+}
+
+.welcome-content span {
+  display: block;
+  margin-top: 45px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #aaa;
+}
+
+.welcome-content button {
+  margin-top: 25px;
+  padding: 14px 30px;
+  border: 1px solid #fff;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 15px #8dbdff;
+}
+
+.welcome-content button:hover {
+  background: #fff;
+  color: #000;
+}
+
+.welcome-screen .hidden {
+  display: none;
+}
+
+@keyframes welcomeFadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 </style>
 </head>
 <body>
  
 
 
+
+
+<!-- MORNINGSTAR OPENING SCREEN -->
+<div id="welcomeScreen" class="welcome-screen">
 <div class="shooting-stars" aria-hidden="true">
   <span style="--start-x:5%;--start-y:-20%;--delay:0s;--length:150px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
   <span style="--start-x:18%;--start-y:80%;--delay:.17s;--length:190px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
@@ -607,9 +677,9 @@ input, select, textarea, .check {
   <span style="--start-x:40%;--start-y:80%;--delay:1.53s;--length:210px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
   <span style="--start-x:54%;--start-y:-10%;--delay:1.70s;--length:135px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
   <span style="--start-x:68%;--start-y:80%;--delay:1.87s;--length:185px;--motion:shootingUp;--angle:-135deg;--travel-x:-220px;--travel-y:-220px"></span>
-  <span style="--start-x:82%;--start-y:-20%;--delay:2.04s;--length:165px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
-  <span style="--start-x:95%;--start-y:80%;--delay:2.21s;--length:195px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
-  <span style="--start-x:8%;--start-y:-15%;--delay:2.38s;--length:145px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
+  <span style="--start-x:82%;--start-yt-y:80%;--delay:2.21s;--length:195px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
+  <span style="--start-x:8%;--s:-20%;--delay:2.04s;--length:165px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
+  <span style="--start-x:95%;--startart-y:-15%;--delay:2.38s;--length:145px;--motion:shootingDown;--angle:-45deg;--travel-x:220px;--travel-y:220px"></span>
   <span style="--start-x:22%;--start-y:80%;--delay:2.55s;--length:200px;--motion:shootingUp;--angle:-135deg;--travel-x:-220px;--travel-y:-220px"></span>
   <span style="--start-x:36%;--start-y:-20%;--delay:2.72s;--length:160px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
   <span style="--start-x:50%;--start-y:80%;--delay:2.89s;--length:180px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
@@ -626,8 +696,25 @@ input, select, textarea, .check {
   <span style="--start-x:48%;--start-y:-20%;--delay:4.76s;--length:135px;--motion:shootingDown;--angle:45deg;--travel-x:-220px;--travel-y:220px"></span>
   <span style="--start-x:80%;--start-y:80%;--delay:4.93s;--length:190px;--motion:shootingUp;--angle:135deg;--travel-x:220px;--travel-y:-220px"></span>
 </div>
+  <div id="welcomePrompt" class="welcome-content">
+    <h1>MORNINGSTAR</h1>
+    <p>TRADING JOURNAL</p>
+    <span>CLICK ANYWHERE TO CONTINUE</span>
+  </div>
 
+  <div id="welcomeLogin" class="welcome-content hidden">
+    <h1>WELCOME BACK</h1>
+    <p>Sign in to access your journal</p>
+    <button type="button" id="welcomeLoginBtn">
+      Sign in with Google
+    </button>
+  </div>
 
+  <div id="welcomeBack" class="welcome-content hidden">
+    <h1 id="welcomeBackName">Welcome back</h1>
+  </div>
+
+</div>
 
 <div class="wrap">
 <header class="hero">
@@ -1229,14 +1316,45 @@ function loadCloudConfig(){
   $('#fbAppId').value = c.appId;
  }
  
-function configureCloud(){const c=getCloudConfig();if(!c.apiKey||!c.authDomain||!c.projectId||!c.appId){cloudMessage('Enter all four Firebase web config values first.',true);return false}try{localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(c));if(!window.firebase){cloudMessage('Firebase libraries could not load. Connect to the internet and reload this page.',true);return false}if(!firebase.apps.length)firebase.initializeApp(c);else {const app=firebase.app();if(app.options.projectId!==c.projectId){cloudMessage('This page already initialized a different Firebase project. Reload the page to switch projects.',true);return false}}cloudAuth=firebase.auth();cloudDb=firebase.firestore();cloudAuth.onAuthStateChanged(async user=>{cloudUser=user||null;
-updateGreeting();$('#googleLoginBtn').disabled=!!user;$('#googleLogoutBtn').disabled=!user;$('#syncCloudBtn').disabled=!user;cloudMessage(user?`Signed in as ${user.email||'Google account'}. Syncing your journal…`:'Firebase configured. Sign in with Google to sync.',false);if(user){
-  try{
-    await syncCloud(false);
-  }catch(e){
-    cloudMessage('Signed in, but sync failed: '+e.message,true);
+cloudAuth.onAuthStateChanged(async user=>{
+  cloudUser=user||null;
+  updateGreeting();
+
+  $('#googleLoginBtn').disabled=!!user;
+  $('#googleLogoutBtn').disabled=!user;
+  $('#syncCloudBtn').disabled=!user;
+
+  if(user){
+    const firstName=user.displayName
+      ? user.displayName.trim().split(/\s+/)[0]
+      : 'Trader';
+
+    $('#welcomeBackName').textContent='Welcome back, '+firstName;
+
+    $('#welcomePrompt').classList.add('hidden');
+    $('#welcomeLogin').classList.add('hidden');
+    $('#welcomeBack').classList.remove('hidden');
+
+    cloudMessage(`Signed in as ${user.email||'Google account'}. Syncing your journal…`);
+
+    setTimeout(()=>{
+      $('#welcomeScreen').classList.add('hidden');
+    },2500);
+
+    try{
+      await syncCloud(false);
+    }catch(e){
+      cloudMessage('Signed in, but sync failed: '+e.message,true);
+    }
+  }else{
+    $('#welcomeScreen').classList.remove('hidden');
+    $('#welcomeBack').classList.add('hidden');
+    $('#welcomeLogin').classList.add('hidden');
+    $('#welcomePrompt').classList.remove('hidden');
+
+    cloudMessage('Firebase configured. Sign in with Google to sync.');
   }
-}});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
+});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
 function mergeTrades(local,remote){const map=new Map();for(const t of [...remote,...local]){const id=String(t.id??JSON.stringify(t));map.set(id,t)}return [...map.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(Number(b.id)||0)-(Number(a.id)||0))}
 function getDeletedIds(accountId=activeAccountId){
   const key=`morningstar_deleted_trade_ids_${accountId}`;
@@ -1618,7 +1736,19 @@ localStorage.removeItem(DELETED_KEY);
     cloudBusy=false;
   }
 }
+// Opening screen: reveal Google sign-in
+$('#welcomeScreen').addEventListener('click',()=>{
+  if(!$('#welcomePrompt').classList.contains('hidden')){
+    $('#welcomePrompt').classList.add('hidden');
+    $('#welcomeLogin').classList.remove('hidden');
+  }
+});
 
+// Reuse the existing Firebase Google login
+$('#welcomeLoginBtn').addEventListener('click',(e)=>{
+  e.stopPropagation();
+  $('#googleLoginBtn').click();
+});
 $('#configureCloudBtn').addEventListener('click',configureCloud);
 $('#googleLoginBtn').addEventListener('click',async()=>{if(!cloudDb&&!configureCloud())return;try{await cloudAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){cloudMessage('Google sign-in failed: '+e.message,true)}});
 $('#googleLogoutBtn').addEventListener('click',async()=>{if(cloudAuth)await cloudAuth.signOut()});
