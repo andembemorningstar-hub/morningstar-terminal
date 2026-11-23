@@ -1057,7 +1057,271 @@ updateGreeting();$('#googleLoginBtn').disabled=!!user;$('#googleLogoutBtn').disa
 function mergeTrades(local,remote){const map=new Map();for(const t of [...remote,...local]){const id=String(t.id??JSON.stringify(t));map.set(id,t)}return [...map.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(Number(b.id)||0)-(Number(a.id)||0))}
 function getDeletedIds(){try{return JSON.parse(localStorage.getItem(DELETED_KEY)||'[]').map(String)}catch(e){return []}}
 function markDeleted(id){const ids=new Set(getDeletedIds());ids.add(String(id));localStorage.setItem(DELETED_KEY,JSON.stringify([...ids]))}
-async function syncCloud(showNotice=true){if(!cloudUser||!cloudDb||cloudBusy)return;cloudBusy=true;try{const root=cloudDb.collection('users').doc(cloudUser.uid),tradeCol=root.collection('trades');const snap=await tradeCol.get();const deleted=new Set(getDeletedIds());const remote=snap.docs.filter(d=>deleted.has(String(d.id)));for(const d of remote)await d.ref.delete();const remoteTrades=snap.docs.filter(d=>!deleted.has(String(d.id))).map(d=>d.data());trades=mergeTrades(trades,remoteTrades);localStorage.setItem(KEY,JSON.stringify(trades));let batch=cloudDb.batch(),count=0;for(const t of trades){batch.set(tradeCol.doc(String(t.id)),t,{merge:true});count++;if(count%400===0){await batch.commit();batch=cloudDb.batch()}}if(count%400!==0)await batch.commit();localStorage.removeItem(DELETED_KEY);const settingsRef=root.collection('settings').doc('account');const localSettings={starting:$('#starting').value||'2000',riskPct:$('#riskPct').value||'0.5'};const settingsSnap=await settingsRef.get();if(settingsSnap.exists){const cloudSettings=settingsSnap.data();if(!localStorage.getItem('morningstar_settings_synced_v1')){if(cloudSettings.starting!=null)$('#starting').value=cloudSettings.starting;if(cloudSettings.riskPct!=null)$('#riskPct').value=cloudSettings.riskPct} }await settingsRef.set({starting:$('#starting').value||localSettings.starting,riskPct:$('#riskPct').value||localSettings.riskPct,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});localStorage.setItem('morningstar_settings_synced_v1','1');render();cloudMessage(`Cloud sync complete · ${trades.length} trade(s) · ${cloudUser.email||'Google account'}`);if(showNotice)alert('Cloud sync complete. Your journal is synced to your Google account.')}catch(e){cloudMessage('Cloud sync failed: '+e.message+' Check Firestore setup and security rules.',true);if(showNotice)alert('Cloud sync failed. Check the cloud status message and Firebase setup.')}finally{cloudBusy=false}}
+
+async function syncCloud(showNotice=true){
+  if(!cloudUser||!cloudDb||cloudBusy||allAccountsView)return;
+
+  cloudBusy=true;
+
+  try{
+    const root=cloudDb.collection('users').doc(cloudUser.uid);
+    const accountsCol=root.collection('accounts');
+
+    // Load accounts already stored in Firebase.
+    const remoteAccounts=await accountsCol.get();
+
+    remoteAccounts.forEach(doc=>{
+      const data=doc.data();
+      const local=getAccount(doc.id);
+
+      if(!local){
+        accounts.push({
+          id:doc.id,
+          name:data.name||doc.id,
+          type:data.type||'funded',
+          starting:Number(data.starting??2000),
+          riskPct:Number(data.riskPct??0.5),
+          updatedAt:Number(data.updatedAt||0)
+        });
+      }else if(Number(data.updatedAt||0)>Number(local.updatedAt||0)){
+        local.name=data.name||local.name;
+        local.starting=Number(data.starting??local.starting);
+        local.riskPct=Number(data.riskPct??local.riskPct);
+        local.updatedAt=Number(data.updatedAt||0);
+      }
+    });
+
+    // Ensure the two permanent accounts exist.
+    if(!getAccount('main')){
+      accounts.unshift({
+        id:'main',
+        name:'Main Account',
+        type:'main',
+        starting:2000,
+        riskPct:0.5
+      });
+    }
+
+    if(!getAccount('news')){
+      accounts.push({
+        id:'news',
+        name:'News Trading Account',
+        type:'news',
+        starting:2000,
+        riskPct:0.5
+      });
+    }
+
+    // Migrate old cloud trades into Main Account once.
+    const mainRef=accountsCol.doc('main');
+    const mainMeta=await mainRef.get();
+
+    if(mainMeta.data()?.legacyMigrated!==true){
+      const legacySnap=await root.collection('trades').get();
+
+      const mainKey=accountTradesKey('main');
+      let mainTrades=[];
+
+      try{
+        mainTrades=JSON.parse(localStorage.getItem(mainKey)||'[]');
+        if(!Array.isArray(mainTrades))mainTrades=[];
+      }catch(e){
+        mainTrades=[];
+      }
+
+      const legacyTrades=legacySnap.docs.map(d=>d.data());
+
+      localStorage.setItem(
+        mainKey,
+        JSON.stringify(mergeTrades(mainTrades,legacyTrades))
+      );
+
+      // Preserve old Main Account settings.
+      const mainSettingsKey=accountSettingsKey('main');
+
+      if(localStorage.getItem(mainSettingsKey)===null){
+        const oldSettings=await root.collection('settings')
+          .doc('account').get();
+
+        if(oldSettings.exists){
+          const data=oldSettings.data();
+
+          localStorage.setItem(mainSettingsKey,JSON.stringify({
+            starting:data.starting??2000,
+            riskPct:data.riskPct??0.5
+          }));
+
+          const mainAccount=getAccount('main');
+          mainAccount.starting=Number(data.starting??2000);
+          mainAccount.riskPct=Number(data.riskPct??0.5);
+        }
+      }
+    }
+
+    const deleted=new Set(getDeletedIds());
+
+    // Synchronize every account independently.
+    for(const account of accounts){
+      const accountRef=accountsCol.doc(account.id);
+      const tradeCol=accountRef.collection('trades');
+      const settingsRef=accountRef.collection('settings').doc('account');
+
+      const localKey=accountTradesKey(account.id);
+      const settingsKey=accountSettingsKey(account.id);
+
+      let localTrades=[];
+      try{
+        localTrades=JSON.parse(localStorage.getItem(localKey)||'[]');
+        if(!Array.isArray(localTrades))localTrades=[];
+      }catch(e){
+        localTrades=[];
+      }
+
+      const remoteSnap=await tradeCol.get();
+
+      const deletedRemote=remoteSnap.docs.filter(
+        d=>deleted.has(String(d.id))
+      );
+
+      for(const doc of deletedRemote){
+        await doc.ref.delete();
+      }
+
+      const remoteTrades=remoteSnap.docs
+        .filter(d=>!deleted.has(String(d.id)))
+        .map(d=>d.data());
+
+      localTrades=localTrades.filter(
+        t=>!deleted.has(String(t.id))
+      );
+
+      const combined=mergeTrades(localTrades,remoteTrades);
+
+      localStorage.setItem(localKey,JSON.stringify(combined));
+
+      let batch=cloudDb.batch();
+      let count=0;
+
+      for(const trade of combined){
+        batch.set(tradeCol.doc(String(trade.id)),trade,{merge:true});
+        count++;
+
+        if(count%400===0){
+          await batch.commit();
+          batch=cloudDb.batch();
+        }
+      }
+
+      if(count%400!==0){
+        await batch.commit();
+      }
+
+      // Load settings from cloud if this device has none.
+      let localSettings={};
+
+      try{
+        localSettings=JSON.parse(
+          localStorage.getItem(settingsKey)||'{}'
+        );
+      }catch(e){
+        localSettings={};
+      }
+
+      const cloudSettingsSnap=await settingsRef.get();
+
+      if(
+        !localStorage.getItem(settingsKey)&&
+        cloudSettingsSnap.exists
+      ){
+        const cloudSettings=cloudSettingsSnap.data();
+
+        localSettings={
+          starting:Number(cloudSettings.starting??account.starting??2000),
+          riskPct:Number(cloudSettings.riskPct??account.riskPct??0.5)
+        };
+
+        localStorage.setItem(settingsKey,JSON.stringify(localSettings));
+      }
+
+      account.starting=Number(
+        localSettings.starting??account.starting??2000
+      );
+
+      account.riskPct=Number(
+        localSettings.riskPct??account.riskPct??0.5
+      );
+
+      const updatedAt=Number(account.updatedAt||Date.now());
+
+      await settingsRef.set({
+        starting:account.starting,
+        riskPct:account.riskPct,
+        updatedAt
+      },{merge:true});
+
+      await accountRef.set({
+        name:account.name,
+        type:account.type,
+        starting:account.starting,
+        riskPct:account.riskPct,
+        updatedAt,
+        legacyMigrated:account.id==='main'
+          ?true
+          :(account.legacyMigrated||false)
+      },{merge:true});
+
+      account.updatedAt=updatedAt;
+    }
+
+    localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
+
+    // Refresh the currently selected account.
+    const activeKey=accountTradesKey(activeAccountId);
+
+    try{
+      trades=JSON.parse(localStorage.getItem(activeKey)||'[]');
+      if(!Array.isArray(trades))trades=[];
+    }catch(e){
+      trades=[];
+    }
+
+    const active=getAccount(activeAccountId);
+
+    if(active){
+      const settings=JSON.parse(
+        localStorage.getItem(accountSettingsKey(activeAccountId))||'{}'
+      );
+
+      $('#starting').value=settings.starting??active.starting;
+      $('#riskPct').value=settings.riskPct??active.riskPct;
+    }
+
+    localStorage.removeItem(DELETED_KEY);
+
+    renderAccountMenu();
+    render();
+
+    cloudMessage(
+      `Cloud sync complete · ${accounts.length} account(s) · ${cloudUser.email||'Google account'}`,
+      false
+    );
+
+    if(showNotice){
+      alert('All accounts and their trades have been synchronized.');
+    }
+
+  }catch(e){
+    cloudMessage('Cloud sync failed: '+e.message,true);
+
+    if(showNotice){
+      alert('Cloud sync failed: '+e.message);
+    }
+
+  }finally{
+    cloudBusy=false;
+  }
+}
+
 $('#configureCloudBtn').addEventListener('click',configureCloud);
 $('#googleLoginBtn').addEventListener('click',async()=>{if(!cloudDb&&!configureCloud())return;try{await cloudAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){cloudMessage('Google sign-in failed: '+e.message,true)}});
 $('#googleLogoutBtn').addEventListener('click',async()=>{if(cloudAuth)await cloudAuth.signOut()});
