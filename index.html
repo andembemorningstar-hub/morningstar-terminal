@@ -1443,34 +1443,56 @@ function getCloudConfig(){
  }
  
 
+
 function loadCloudConfig(){
-  const c = getCloudConfig();
-  $('#fbApiKey').value = c.apiKey;
-  $('#fbAuthDomain').value = c.authDomain;
-  $('#fbProjectId').value = c.projectId;
-  $('#fbAppId').value = c.appId;
- }
- 
-cloudAuth.onAuthStateChanged(async user=>{
-  cloudUser=user||null;
-  updateGreeting();
+  const c=getCloudConfig();
+  $('#fbApiKey').value=c.apiKey;
+  $('#fbAuthDomain').value=c.authDomain;
+  $('#fbProjectId').value=c.projectId;
+  $('#fbAppId').value=c.appId;
+}
 
-  $('#googleLoginBtn').disabled=!!user;
-  $('#googleLogoutBtn').disabled=!user;
-  $('#syncCloudBtn').disabled=!user;
+function configureCloud(){
+  try{
+    const c=getCloudConfig();
 
-  if(user){
-    cloudMessage(`Signed in as ${user.email||'Google account'}. Syncing your journal…`);
-
-    try{
-      await syncCloud(false);
-    }catch(e){
-      cloudMessage('Signed in, but sync failed: '+e.message,true);
+    if(!firebase.apps.length){
+      firebase.initializeApp(c);
     }
-  }else{
-    cloudMessage('Firebase configured. Sign in with Google to sync.');
+
+    cloudAuth=firebase.auth();
+    cloudDb=firebase.firestore();
+
+    cloudAuth.onAuthStateChanged(async user=>{
+      cloudUser=user||null;
+      updateGreeting();
+
+      $('#googleLoginBtn').disabled=!!user;
+      $('#googleLogoutBtn').disabled=!user;
+      $('#syncCloudBtn').disabled=!user;
+
+      if(user){
+        cloudMessage(`Signed in as ${user.email||'Google account'}. Syncing your journal…`);
+
+        try{
+          await syncCloud(false);
+        }catch(e){
+          cloudMessage('Signed in, but sync failed: '+e.message,true);
+        }
+      }else{
+        cloudMessage('Firebase configured. Sign in with Google to sync.');
+      }
+    });
+
+    cloudMessage('Firebase configured. Now choose "Sign in with Google".');
+    return true;
+
+  }catch(e){
+    cloudMessage('Firebase setup failed: '+e.message,true);
+    return false;
   }
-});
+}
+
 function mergeTrades(local,remote){const map=new Map();for(const t of [...remote,...local]){const id=String(t.id??JSON.stringify(t));map.set(id,t)}return [...map.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(Number(b.id)||0)-(Number(a.id)||0))}
 function getDeletedIds(accountId=activeAccountId){
   const key=`morningstar_deleted_trade_ids_${accountId}`;
