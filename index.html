@@ -1023,9 +1023,191 @@ if(allAccountsView){
 let form=e.target,f=new FormData(form),risk=Number(f.get('risk')),pnl=Number(f.get('pnl'));if(!(risk>0)||!Number.isFinite(pnl)){alert('Enter a valid risk amount and realized P&L.');return}const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent='Saving…';try{const beforeImage=await compressImage(form.elements.beforeImage.files[0]),afterImage=await compressImage(form.elements.afterImage.files[0]);let t={id:Date.now(),date:f.get('date'),instrument:f.get('instrument'),direction:f.get('direction'),session:f.get('session'),setup:f.get('setup'),outcome:f.get('outcome'),entry:f.get('entry'),sl:f.get('sl'),tp:f.get('tp'),risk,pnl,r:pnl/risk,emotion:f.get('emotion'),bias:f.has('bias'),sweep:f.has('sweep'),bos:f.has('bos'),fvg:f.has('fvg'),rules:f.has('rules')&&f.has('bias')&&f.has('sweep')&&f.has('bos')&&f.has('fvg'),mistake:f.get('mistake'),notes:f.get('notes'),beforeImage:beforeImage||null,afterImage:afterImage||null};trades.unshift(t);save();form.reset();$('#beforePreview').textContent='No before-trade image selected.';$('#afterPreview').textContent='No after-trade image selected.';form.elements.date.value=new Date().toISOString().slice(0,10);form.elements.risk.value=10;go('journal')}catch(err){alert(err.message||'Could not save the trade screenshots. Try smaller images.')}finally{submit.disabled=false;submit.textContent='Save trade'}});
 $('#resetForm').addEventListener('click',()=>setTimeout(()=>$('#tradeForm').elements.date.value=new Date().toISOString().slice(0,10),0));
 function download(name,content,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-$('#backupBtn').addEventListener('click',()=>download('morningstar-trading-backup.json',JSON.stringify({version:2,exportedAt:new Date().toISOString(),trades},null,2),'application/json'));
-$('#exportBtn').addEventListener('click',()=>{let keys=['date','instrument','direction','session','setup','entry','sl','tp','risk','pnl','r','emotion','bias','sweep','bos','fvg','rules','mistake','notes'];let csv=[keys.join(','),...trades.map(t=>keys.map(k=>'"'+String(t[k]??'').replace(/"/g,'""')+'"').join(','))].join('\r\n');download('morningstar-trades.csv',csv,'text/csv;charset=utf-8')});
-$('#importFile').addEventListener('change',async e=>{let file=e.target.files[0];if(!file)return;try{let obj=JSON.parse(await file.text()),incoming=Array.isArray(obj)?obj:obj.trades;if(!Array.isArray(incoming))throw Error('No trades array');if(confirm(`Import ${incoming.length} trades? This replaces current trades in this browser.`)){trades=incoming;save();alert('Backup imported.')}}catch(err){alert('Could not import that backup file.')}e.target.value=''});
+$('#backupBtn').addEventListener('click',()=>{
+  if(!allAccountsView)saveAccountSettings();
+
+  const tradesByAccount={};
+  const settingsByAccount={};
+
+  accounts.forEach(account=>{
+    try{
+      tradesByAccount[account.id]=JSON.parse(
+        localStorage.getItem(accountTradesKey(account.id))||'[]'
+      );
+    }catch(e){
+      tradesByAccount[account.id]=[];
+    }
+
+    try{
+      settingsByAccount[account.id]=JSON.parse(
+        localStorage.getItem(accountSettingsKey(account.id))||'{}'
+      );
+    }catch(e){
+      settingsByAccount[account.id]={};
+    }
+  });
+
+  const deletedTradeIdsByAccount={};
+
+accounts.forEach(account=>{
+  deletedTradeIdsByAccount[account.id]=getDeletedIds(account.id);
+});
+
+const backup={
+  version:3,
+  exportedAt:new Date().toISOString(),
+  accounts,
+  activeAccountId,
+  tradesByAccount,
+  settingsByAccount,
+  deletedTradeIdsByAccount,
+  deletedAccountIds:JSON.parse(
+    localStorage.getItem('morningstar_deleted_accounts_v1')||'[]'
+  )
+};
+
+  download(
+    'morningstar-complete-backup.json',
+    JSON.stringify(backup,null,2),
+    'application/json'
+  );
+
+  alert('Complete backup created for all accounts.');
+});
+$('#exportBtn').addEventListener('click',()=>{
+  const keys=[
+    'account','date','instrument','direction','session',
+    'setup','entry','sl','tp','risk','pnl','r',
+    'emotion','bias','sweep','bos','fvg','rules',
+    'mistake','notes'
+  ];
+
+  const rows=trades.map(t=>({
+    ...t,
+    account:allAccountsView
+      ?t._accountName||'Unknown'
+      :getAccount(activeAccountId)?.name||'Main Account'
+  }));
+
+  const escapeCSV=value=>
+    '"'+String(value??'').replace(/"/g,'""')+'"';
+
+  const csv=[
+    keys.map(escapeCSV).join(','),
+    ...rows.map(t=>keys.map(k=>escapeCSV(t[k])).join(','))
+  ].join('\r\n');
+
+  download(
+    'morningstar-trades.csv',
+    csv,
+    'text/csv;charset=utf-8'
+  );
+});
+$('#importFile').addEventListener('change',async e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+
+  try{
+    if(allAccountsView){
+      throw Error('Select a specific account before importing.');
+    }
+
+    const obj=JSON.parse(await file.text());
+
+    // Restore a complete version 3 backup.
+    if(obj.version===3){
+      if(!Array.isArray(obj.accounts)||
+         !obj.tradesByAccount||
+         typeof obj.tradesByAccount!=='object'){
+        throw Error('Invalid complete backup.');
+      }
+
+      if(!confirm(
+        'Restore all accounts, settings and trades? This replaces the current local account data.'
+      ))return;
+
+      accounts=obj.accounts;
+      localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
+
+      for(const account of accounts){
+        const accountTrades=obj.tradesByAccount[account.id]||[];
+        const accountSettings=obj.settingsByAccount?.[account.id]||{};
+
+        if(!Array.isArray(accountTrades)){
+          throw Error('Invalid trades for '+account.name);
+        }
+
+        localStorage.setItem(
+          accountTradesKey(account.id),
+          JSON.stringify(accountTrades)
+        );
+
+        localStorage.setItem(
+          accountSettingsKey(account.id),
+          JSON.stringify(accountSettings)
+        );
+      }
+
+      const deletedIds=Array.isArray(obj.deletedAccountIds)
+        ?obj.deletedAccountIds.filter(id=>typeof id==='string')
+        :[];
+const deletedTrades=obj.deletedTradeIdsByAccount||{};
+
+accounts.forEach(account=>{
+  const ids=deletedTrades[account.id];
+
+  const key=`morningstar_deleted_trade_ids_${account.id}`;
+
+  if(Array.isArray(ids)){
+    localStorage.setItem(
+      key,
+      JSON.stringify(ids.map(String))
+    );
+  }else{
+    localStorage.removeItem(key);
+  }
+});
+
+localStorage.removeItem(DELETED_KEY);
+      localStorage.setItem(
+        'morningstar_deleted_accounts_v1',
+        JSON.stringify(deletedIds)
+      );
+
+      activeAccountId=accounts.some(a=>a.id===obj.activeAccountId)
+        ?obj.activeAccountId
+        :'main';
+
+      localStorage.setItem(ACTIVE_ACCOUNT_KEY,activeAccountId);
+
+      load();
+      renderAccountMenu();
+      render();
+
+      alert('Complete backup restored successfully.');
+    }else{
+      // Import older version 2 or plain trade-array backups.
+      const incoming=Array.isArray(obj)?obj:obj.trades;
+
+      if(!Array.isArray(incoming)){
+        throw Error('No trades array found.');
+      }
+
+      if(!confirm(
+        `Import ${incoming.length} trades into ${getAccount(activeAccountId)?.name||'this account'}? This replaces its current trades.`
+      ))return;
+
+      trades=incoming;
+      save();
+
+      alert('Trades imported successfully.');
+    }
+  }catch(err){
+    alert('Import failed: '+err.message);
+  }finally{
+    e.target.value='';
+  }
+});
 
 function cloudMessage(msg,isError=false){const el=$('#cloudMessage');if(el)el.textContent=msg;const st=$('#cloudStatus');if(st){st.textContent=cloudUser?`Signed in: ${cloudUser.email||'Google account'}`:(cloudDb?'Configured · signed out':'Not connected');st.style.color=isError?'#ff7777':(cloudUser?'#a6f36b':'#91a3bc')}}
 
@@ -1049,14 +1231,38 @@ function loadCloudConfig(){
  
 function configureCloud(){const c=getCloudConfig();if(!c.apiKey||!c.authDomain||!c.projectId||!c.appId){cloudMessage('Enter all four Firebase web config values first.',true);return false}try{localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(c));if(!window.firebase){cloudMessage('Firebase libraries could not load. Connect to the internet and reload this page.',true);return false}if(!firebase.apps.length)firebase.initializeApp(c);else {const app=firebase.app();if(app.options.projectId!==c.projectId){cloudMessage('This page already initialized a different Firebase project. Reload the page to switch projects.',true);return false}}cloudAuth=firebase.auth();cloudDb=firebase.firestore();cloudAuth.onAuthStateChanged(async user=>{cloudUser=user||null;
 updateGreeting();$('#googleLoginBtn').disabled=!!user;$('#googleLogoutBtn').disabled=!user;$('#syncCloudBtn').disabled=!user;cloudMessage(user?`Signed in as ${user.email||'Google account'}. Syncing your journal…`:'Firebase configured. Sign in with Google to sync.',false);if(user){
-  cloudMessage(
-    'Signed in. Account-separated cloud sync is being prepared. Existing cloud records are preserved.',
-    false
-  );
+  try{
+    await syncCloud(false);
+  }catch(e){
+    cloudMessage('Signed in, but sync failed: '+e.message,true);
+  }
 }});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
 function mergeTrades(local,remote){const map=new Map();for(const t of [...remote,...local]){const id=String(t.id??JSON.stringify(t));map.set(id,t)}return [...map.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(Number(b.id)||0)-(Number(a.id)||0))}
-function getDeletedIds(){try{return JSON.parse(localStorage.getItem(DELETED_KEY)||'[]').map(String)}catch(e){return []}}
-function markDeleted(id){const ids=new Set(getDeletedIds());ids.add(String(id));localStorage.setItem(DELETED_KEY,JSON.stringify([...ids]))}
+function getDeletedIds(accountId=activeAccountId){
+  const key=`morningstar_deleted_trade_ids_${accountId}`;
+
+  try{
+    const ids=JSON.parse(localStorage.getItem(key)||'[]');
+
+    if(accountId==='main'){
+      const legacy=JSON.parse(localStorage.getItem(DELETED_KEY)||'[]');
+      return [...new Set([...ids,...legacy].map(String))];
+    }
+
+    return ids.map(String);
+  }catch(e){
+    return [];
+  }
+}
+
+function markDeleted(id){
+  const key=`morningstar_deleted_trade_ids_${activeAccountId}`;
+  const ids=new Set(getDeletedIds(activeAccountId));
+
+  ids.add(String(id));
+
+  localStorage.setItem(key,JSON.stringify([...ids]));
+}
 
 async function syncCloud(showNotice=true){
   if(!cloudUser||!cloudDb||cloudBusy||allAccountsView)return;
@@ -1068,28 +1274,98 @@ async function syncCloud(showNotice=true){
     const accountsCol=root.collection('accounts');
 
     // Load accounts already stored in Firebase.
-    const remoteAccounts=await accountsCol.get();
+    // Read locally deleted account IDs.
+const deletedAccountsCol=root.collection('deletedAccounts');
 
-    remoteAccounts.forEach(doc=>{
-      const data=doc.data();
-      const local=getAccount(doc.id);
+let localDeletedAccountIds=[];
 
-      if(!local){
-        accounts.push({
-          id:doc.id,
-          name:data.name||doc.id,
-          type:data.type||'funded',
-          starting:Number(data.starting??2000),
-          riskPct:Number(data.riskPct??0.5),
-          updatedAt:Number(data.updatedAt||0)
-        });
-      }else if(Number(data.updatedAt||0)>Number(local.updatedAt||0)){
-        local.name=data.name||local.name;
-        local.starting=Number(data.starting??local.starting);
-        local.riskPct=Number(data.riskPct??local.riskPct);
-        local.updatedAt=Number(data.updatedAt||0);
-      }
+try{
+  localDeletedAccountIds=JSON.parse(
+    localStorage.getItem('morningstar_deleted_accounts_v1')||'[]'
+  );
+
+  if(!Array.isArray(localDeletedAccountIds)){
+    localDeletedAccountIds=[];
+  }
+}catch(e){
+  localDeletedAccountIds=[];
+}
+
+// Publish deletion records to Firebase.
+for(const id of localDeletedAccountIds){
+  await deletedAccountsCol.doc(id).set({
+    deletedAt:Date.now()
+  },{merge:true});
+}
+
+// Read deletion records from all devices.
+const deletedSnap=await deletedAccountsCol.get();
+
+const deletedAccountIds=new Set([
+  ...localDeletedAccountIds,
+  ...deletedSnap.docs.map(doc=>doc.id)
+]);
+
+// Permanently remove deleted accounts and their cloud records.
+for(const id of deletedAccountIds){
+  const accountRef=accountsCol.doc(id);
+  const tradeSnap=await accountRef.collection('trades').get();
+
+  for(let i=0;i<tradeSnap.docs.length;i+=400){
+    const batch=cloudDb.batch();
+
+    tradeSnap.docs.slice(i,i+400).forEach(doc=>{
+      batch.delete(doc.ref);
     });
+
+    await batch.commit();
+  }
+
+  await accountRef.collection('settings').doc('account').delete();
+  await accountRef.delete();
+
+  localStorage.removeItem(accountTradesKey(id));
+  localStorage.removeItem(accountSettingsKey(id));
+}
+
+accounts=accounts.filter(a=>!deletedAccountIds.has(a.id));
+
+if(deletedAccountIds.has(activeAccountId)){
+  activeAccountId='main';
+  localStorage.setItem(ACTIVE_ACCOUNT_KEY,'main');
+}
+
+// Load remaining cloud accounts.
+const remoteAccounts=await accountsCol.get();
+
+remoteAccounts.forEach(doc=>{
+  const data=doc.data();
+  const local=getAccount(doc.id);
+
+  if(!local){
+    accounts.push({
+      id:doc.id,
+      name:data.name||doc.id,
+      type:data.type||'funded',
+      starting:Number(data.starting??2000),
+      riskPct:Number(data.riskPct??0.5),
+      updatedAt:Number(data.updatedAt||0)
+    });
+  }else if(Number(data.updatedAt||0)>Number(local.updatedAt||0)){
+  local.name=data.name||local.name;
+  local.starting=Number(data.starting??local.starting);
+  local.riskPct=Number(data.riskPct??local.riskPct);
+  local.updatedAt=Number(data.updatedAt||0);
+
+  localStorage.setItem(
+    accountSettingsKey(doc.id),
+    JSON.stringify({
+      starting:local.starting,
+      riskPct:local.riskPct
+    })
+  );
+}
+});
 
     // Ensure the two permanent accounts exist.
     if(!getAccount('main')){
@@ -1158,10 +1434,9 @@ async function syncCloud(showNotice=true){
       }
     }
 
-    const deleted=new Set(getDeletedIds());
-
     // Synchronize every account independently.
-    for(const account of accounts){
+for(const account of accounts){
+  const deleted=new Set(getDeletedIds(account.id));
       const accountRef=accountsCol.doc(account.id);
       const tradeCol=accountRef.collection('trades');
       const settingsRef=accountRef.collection('settings').doc('account');
@@ -1296,7 +1571,13 @@ async function syncCloud(showNotice=true){
       $('#riskPct').value=settings.riskPct??active.riskPct;
     }
 
-    localStorage.removeItem(DELETED_KEY);
+    accounts.forEach(account=>{
+  localStorage.removeItem(
+    `morningstar_deleted_trade_ids_${account.id}`
+  );
+});
+
+localStorage.removeItem(DELETED_KEY);
 
     renderAccountMenu();
     render();
@@ -1326,10 +1607,7 @@ $('#configureCloudBtn').addEventListener('click',configureCloud);
 $('#googleLoginBtn').addEventListener('click',async()=>{if(!cloudDb&&!configureCloud())return;try{await cloudAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){cloudMessage('Google sign-in failed: '+e.message,true)}});
 $('#googleLogoutBtn').addEventListener('click',async()=>{if(cloudAuth)await cloudAuth.signOut()});
 $('#syncCloudBtn').addEventListener('click',()=>{
-  cloudMessage(
-    'Account-separated cloud sync is not ready yet. Your local trades remain saved.',
-    false
-  );
+  syncCloud(true);
 });
 
 function saveAccountSettings(){
@@ -1337,6 +1615,7 @@ function saveAccountSettings(){
 
   const account=getAccount(activeAccountId);
   if(!account)return;
+ account.updatedAt=Date.now();
 
   account.starting=Number($('#starting').value)||0;
   account.riskPct=Number($('#riskPct').value)||0;
@@ -1459,6 +1738,7 @@ function addFundedAccount(){
     type:'funded',
     starting:balance,
     riskPct:risk
+   updatedAt:Date.now()
   });
 
   localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
@@ -1476,6 +1756,7 @@ function renameAccount(id){
   if(!account)return;
 
   const name=prompt('Enter the new account name:',account.name);
+ account.updatedAt=Date.now();
   if(!name||!name.trim())return;
 
   account.name=name.trim();
@@ -1489,8 +1770,24 @@ function deleteAccount(id){
   if(!account||account.type!=='funded')return;
 
   if(!confirm(
-    `Permanently delete "${account.name}" and its local trades?`
+    `Permanently delete "${account.name}" and its trades from this device and cloud?`
   ))return;
+
+  const deletedKey='morningstar_deleted_accounts_v1';
+  let deletedIds=[];
+
+  try{
+    deletedIds=JSON.parse(localStorage.getItem(deletedKey)||'[]');
+    if(!Array.isArray(deletedIds))deletedIds=[];
+  }catch(e){
+    deletedIds=[];
+  }
+
+  if(!deletedIds.includes(id)){
+    deletedIds.push(id);
+  }
+
+  localStorage.setItem(deletedKey,JSON.stringify(deletedIds));
 
   accounts=accounts.filter(a=>a.id!==id);
 
@@ -1498,8 +1795,11 @@ function deleteAccount(id){
   localStorage.removeItem(accountSettingsKey(id));
   localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
 
-  if(activeAccountId===id)switchAccount('main');
-  else renderAccountMenu();
+  if(activeAccountId===id){
+    switchAccount('main');
+  }else{
+    renderAccountMenu();
+  }
 }
 
 function showAllAccounts(){
