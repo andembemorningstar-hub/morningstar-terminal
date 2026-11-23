@@ -699,7 +699,9 @@ input, select, textarea, .check {
   <div id="welcomePrompt" class="welcome-content">
     <h1>MORNINGSTAR</h1>
     <p>TRADING JOURNAL</p>
-    <span>CLICK ANYWHERE TO CONTINUE</span>
+    <button type="button" id="continueButton">
+  CLICK HERE TO CONTINUE
+</button>
   </div>
 
   <div id="welcomeLogin" class="welcome-content hidden">
@@ -1737,11 +1739,10 @@ localStorage.removeItem(DELETED_KEY);
   }
 }
 // Opening screen: respond to mouse and mobile touch
-$('#welcomeScreen').addEventListener('pointerdown',()=>{
-  if(!$('#welcomePrompt').classList.contains('hidden')){
-    $('#welcomePrompt').classList.add('hidden');
-    $('#welcomeLogin').classList.remove('hidden');
-  }
+// Continue button opens Google sign-in screen
+$('#continueButton').addEventListener('click',()=>{
+  $('#welcomePrompt').classList.add('hidden');
+  $('#welcomeLogin').classList.remove('hidden');
 });
 
 // Reuse the existing Firebase Google login
