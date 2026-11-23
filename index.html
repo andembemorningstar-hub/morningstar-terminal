@@ -1749,13 +1749,13 @@ function addFundedAccount(){
   const id='funded-'+Date.now();
 
   accounts.push({
-    id,
-    name:name.trim(),
-    type:'funded',
-    starting:balance,
-    riskPct:risk
-   updatedAt:Date.now()
-  });
+  id,
+  name:name.trim(),
+  type:'funded',
+  starting:balance,
+  riskPct:risk,
+  updatedAt:Date.now()
+});
 
   localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
   localStorage.setItem(accountTradesKey(id),'[]');
@@ -1772,10 +1772,10 @@ function renameAccount(id){
   if(!account)return;
 
   const name=prompt('Enter the new account name:',account.name);
- account.updatedAt=Date.now();
-  if(!name||!name.trim())return;
+if(!name||!name.trim())return;
 
-  account.name=name.trim();
+account.name=name.trim();
+account.updatedAt=Date.now();
   localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(accounts));
 
   renderAccountMenu();
