@@ -1747,6 +1747,7 @@ $('#continueButton').addEventListener('click',()=>{
 
 // Welcome screen Google login
 $('#welcomeLoginBtn').addEventListener('click',async(e)=>{
+ alert('Google button clicked');
   e.stopPropagation();
 
   if(!cloudDb && !configureCloud()) return;
