@@ -1470,7 +1470,7 @@ cloudAuth.onAuthStateChanged(async user=>{
   }else{
     cloudMessage('Firebase configured. Sign in with Google to sync.');
   }
-});cloudMessage('Firebase configured. Now choose “Sign in with Google”.');return true}catch(e){cloudMessage('Firebase setup failed: '+e.message,true);return false}}
+});
 function mergeTrades(local,remote){const map=new Map();for(const t of [...remote,...local]){const id=String(t.id??JSON.stringify(t));map.set(id,t)}return [...map.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(Number(b.id)||0)-(Number(a.id)||0))}
 function getDeletedIds(accountId=activeAccountId){
   const key=`morningstar_deleted_trade_ids_${accountId}`;
