@@ -1152,6 +1152,20 @@ function periodTotals(mode){let map=new Map();for(const t of trades){let key=(t.
 function groupStats(key,items){let groups=[...new Set(items.map(t=>t[key]||'Other'))];return groups.length?groups.map(g=>{let a=items.filter(t=>(t[key]||'Other')===g),v=sum(a);return barRow(g,v,Math.max(1,...groups.map(x=>Math.abs(sum(items.filter(t=>(t[key]||'Other')===x))))),`${money(v)} · ${a.length} trades`)}).join(''):noData()}
 function render(){
  const s=stats();$('#heroPnl').textContent=money(s.net);$('#heroPnl').className=s.net>=0?'positive':'negative';$('#heroCount').textContent=s.n;$('#heroCompliance').textContent=s.n?s.comp.toFixed(0)+'%':'—';
+ // TODAY'S PERFORMANCE
+const now = new Date();
+const todayKey = localDateKey(
+  now.getFullYear(),
+  now.getMonth(),
+  now.getDate()
+);
+
+const todaysTrades = trades.filter(t => t.date === todayKey);
+const todaysPnl = sum(todaysTrades);
+
+$('#todayPnl').textContent = money(todaysPnl);
+$('#todayPnl').className = todaysPnl >= 0 ? 'positive' : 'negative';
+$('#todayTrades').textContent = todaysTrades.length;
  $('#metrics').innerHTML=metric('Win rate',s.wr.toFixed(1)+'%',`${s.w} wins · ${s.l} losses`)+metric('Profit factor',s.pf===Infinity?'∞':s.pf.toFixed(2),'Gross profit ÷ gross loss')+metric('Average R',s.avgR.toFixed(2)+'R','Realized P&L ÷ risked amount')+metric('Rule compliance',s.n?s.comp.toFixed(0)+'%':'—','Trades with all rules respected');
  let start=Number($('#starting').value)||0;$('#riskDollars').textContent=money(start*(Number($('#riskPct').value)||0)/100);
  if(!trades.length)$('#equity').innerHTML=noData();else {let chronological=trades.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(Number(a.id)||0)-(Number(b.id)||0)),runP=0,runR=0,labels=[],pVals=[],rVals=[];chronological.forEach((t,i)=>{runP+=Number(t.pnl)||0;runR+=Number(t.r)||0;labels.push((t.date||'Trade')+' #'+(i+1));pVals.push(runP);rVals.push(runR)});$('#equity').innerHTML=`<div class="muted">Starting ${money(start)} · Current ${money(start+s.net)} · Net ${money(s.net)} / ${sum(trades,t=>t.r).toFixed(2)}R cumulative</div><div class="chart-legend"><span><i class="legend-dot" style="background:#a6f36b"></i>Cumulative P&amp;L ($)</span></div>${lineChart([{values:pVals}],labels,['#00ff9d'],'Cumulative P&L in dollars',{startingBalance:start})}<div class="chart-legend"><span><i class="legend-dot" style="background:#64b5ff"></i>Cumulative R</span></div>${lineChart([{values:rVals}],labels,['#64b5ff'],'Cumulative R multiple')}<div class="muted">Chronological cumulative realized P&amp;L and R; excludes deposits and withdrawals. R is calculated as realized P&amp;L divided by risked amount per trade.</div>`}
